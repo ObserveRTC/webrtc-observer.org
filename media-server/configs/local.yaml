@@ -1,0 +1,25 @@
+server:
+  port: 9081
+  serverIp: "127.0.0.1"
+  # announcedIp: "127.0.0.1"
+mediasoup:
+  numberOfWorkers: 2
+  workerSettings:
+    logLevel: "warn"
+    logTags:
+      - "info"
+      - "ice"
+      - "dtls"
+      - "rtp"
+      - "srtp"
+      - "rtcp"
+    rtcMinPort: 40000
+    rtcMaxPort: 41000
+  mediaCodecs:
+    - kind: "audio"
+      mimeType: "audio/opus"
+      clockRate: 48000
+      channels: 2
+    - kind: "video"
+      mimeType: "video/VP8"
+      clockRate: 90000

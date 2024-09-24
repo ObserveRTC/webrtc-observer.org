@@ -1,0 +1,10 @@
+node_modules/
+lib/
+keys/*
+package-lock.json
+!package.json
+!tsconfig.json
+shell.txt
+# yarn*
+yarn-error.log
+appendixes.ts

@@ -1,0 +1,27 @@
+version: "3.8"
+
+services:
+  webapp:
+    build:
+      context: ./webapp-2
+      # dockerfile: ./webapp-2/Dockerfile
+    ports:
+      - "3001:3000" # Adjust if webapp uses another port
+    depends_on:
+      - media-server
+    volumes:
+      - ./webapp-2:/app
+    environment:
+      - VITE_MEDIA_SERVER_HOST=ws://media-server:9081
+
+  media-server:
+    build:
+      context: ./media-server
+      # dockerfile: ./media-server/Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./media-server/configs:/app/config
+    environment:
+      - NODE_ENV=development
+      - CONFIG_PATH=/app/config/local.yaml
