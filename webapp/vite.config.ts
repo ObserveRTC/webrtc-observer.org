@@ -4,6 +4,9 @@ import solidPlugin from 'vite-plugin-solid';
 export default defineConfig({ 
 	plugins: [ solidPlugin() ], 
 	server: { port: 3000 }, 
-	build: { target: 'esnext' },
+	build: { 
+		outDir: 'build',
+		target: 'esnext' 
+	},
 	// optimizeDeps: { exclude: ['fsevents'] },
 });
