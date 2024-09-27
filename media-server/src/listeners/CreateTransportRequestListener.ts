@@ -33,11 +33,16 @@ export function createCreateTransportRequestListener(listenerContext: CreateTran
 				}
 				const { role, requestId } = request;
 				const router = mediasoupService.routers.get(client.routerId ?? '');
+				const worker = mediasoupService.workers.get(router?.appData.workerPid ?? 0);
+				const webRtcServer = worker?.appData.webRtcServer;
+
 				let response: CreateTransportResponsePayload | undefined;
 				let error: string | undefined;
 				try {
 					if (!router) {
 						throw new Error(`Client ${client.clientId} has not joined a call yet`);
+					} else if (!worker) {
+						throw new Error(`Worker ${router.appData.workerPid} not found`);
 					}
 					if (
 						(role === 'producing' && client.sndTransport) || 
@@ -47,12 +52,24 @@ export function createCreateTransportRequestListener(listenerContext: CreateTran
 						return;
 					}
 					
-					const transportOptions: mediasoup.types.WebRtcTransportOptions = {
-						listenIps: [{
-							ip: server.config.serverIp,
-							announcedIp: server.config.announcedIp,
-						}],
-					};
+					let transportOptions: mediasoup.types.WebRtcTransportOptions;
+					if (webRtcServer) {
+						transportOptions = {
+							webRtcServer,
+						};
+
+						// also the ice candidate should be fetched here
+						// port can be extracted like this:
+						// webRtcServer.appData.port
+					} else {
+						transportOptions = {
+							listenIps: [{
+								ip: server.config.serverIp,
+								announcedIp: server.config.announcedIp,
+							}],
+						};
+					}
+					
 					const transport = await router.createWebRtcTransport(transportOptions);
 
 					transport.observer.once('close', () => {

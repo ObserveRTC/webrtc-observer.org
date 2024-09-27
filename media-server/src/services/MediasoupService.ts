@@ -8,7 +8,16 @@ const logger = createLogger('MediasoupService');
 export type MediasoupServiceConfig = {
 	numberOfWorkers: number;
 	workerSettings: mediasoup.types.WorkerSettings;
+	webRtcServerSettings: mediasoup.types.WebRtcServerOptions[];
 	mediaCodecs: mediasoup.types.RtpCodecCapability[];
+}
+
+type WorkerAppData = {
+	webRtcServer?: mediasoup.types.WebRtcServer<{ port: number }>;
+}
+
+type RouterAppData = {
+	workerPid: number;
 }
 
 type ProducerAppData = {
@@ -23,8 +32,8 @@ type ConsumerAppData = {
 
 export class MediasoupService {
 	private _run = false;
-	public readonly workers = new Map<number, mediasoup.types.Worker>();
-	public readonly routers = new Map<string, mediasoup.types.Router>();
+	public readonly workers = new Map<number, mediasoup.types.Worker<WorkerAppData>>();
+	public readonly routers = new Map<string, mediasoup.types.Router<RouterAppData>>();
 	public readonly transports = new Map<string, mediasoup.types.Transport>();
 	public readonly mediaProducers = new Map<string, mediasoup.types.Producer<ProducerAppData>>();
 	public readonly mediaConsumers = new Map<string, mediasoup.types.Consumer<ConsumerAppData>>();
@@ -40,10 +49,39 @@ export class MediasoupService {
 	public async start() {
 		if (this._run) return;
 		this._run = true;
+		const webrtcServerListeningPorts = new Set<number>();
 
 		for (let i = 0; i < this.config.numberOfWorkers; i++) {
-			const worker = await mediasoup.createWorker(this.config.workerSettings);
+			const worker = await mediasoup.createWorker<WorkerAppData>({
+				...this.config.workerSettings,
+				appData: {
+					webRtcServer: undefined,
+				}
+			});
+			const webrtcServerOptions = this.config.webRtcServerSettings?.[i];
 
+			if (webrtcServerOptions) {
+				if (webrtcServerOptions.listenInfos.length < 1) throw new Error('No listenInfos provided for webrtc server');
+				let port: number | undefined = undefined;
+
+				for (const info of webrtcServerOptions.listenInfos) {
+					if (!info.port) throw new Error('Port is not provided for webrtc server');
+					if (port === undefined) port = info.port;
+					else if (port !== info.port) throw new Error('Port must be the same for all listenInfos for one webrtc server');
+				}
+				if (!port) throw new Error('Port is not provided for webrtc server');
+				else if (webrtcServerListeningPorts.has(port)) throw new Error(`Port ${port} is already used by another webrtc server`);
+
+				worker.appData.webRtcServer = await worker.createWebRtcServer({
+					...webrtcServerOptions,
+					appData: {
+						port,
+					}
+				});
+
+				logger.info(`Worker ${worker.pid} created with webrtc server on port ${port}`);
+			}
+			
 			worker.once('died', () => {
 				this.workers.delete(worker.pid);
 				logger.error(`Worker ${worker.pid} died`);
@@ -71,8 +109,11 @@ export class MediasoupService {
 		if (router) return router;
 
 		const worker = [...this.workers.values()][Math.floor(Math.random() * this.workers.size)];
-		router = await worker.createRouter({
+		router = await worker.createRouter<RouterAppData>({
 			mediaCodecs: this.config.mediaCodecs,
+			appData: {
+				workerPid: worker.pid,
+			}
 		});
 
 		const addTransport = (transport: mediasoup.types.Transport) => this._addTransport(router!, transport);

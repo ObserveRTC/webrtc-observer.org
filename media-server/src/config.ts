@@ -2,7 +2,6 @@ import fs from 'fs';
 import YAML from 'yaml';
 import type { MediasoupServiceConfig } from './services/MediasoupService';
 import type { ServerConfig } from './Server';
-import type { KafkaConfig } from 'kafkajs';
 
 export type Config = {
     server: ServerConfig,
@@ -35,6 +34,24 @@ const getDefaultConfig: () => Config = () => {
                     mimeType: 'video/VP8',
                     clockRate: 90000,
                 },
+            ],
+            webRtcServerSettings: [
+                {
+                    listenInfos: [
+                        {
+                            ip: '127.0.0.1',
+                            protocol: 'udp',
+                            // announcedAddress
+                            port: 5000
+                        },
+                        {
+                            ip: '127.0.0.1',
+                            protocol: 'tcp',
+                            // announcedAddress
+                            port: 5000,
+                        }
+                    ]
+                }
             ]
         }
 	};

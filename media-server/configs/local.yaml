@@ -1,9 +1,9 @@
 server:
-  port: 9081
+  port: 9080
   serverIp: "127.0.0.1"
   # announcedIp: "127.0.0.1"
 mediasoup:
-  numberOfWorkers: 2
+  numberOfWorkers: 1
   workerSettings:
     logLevel: "warn"
     logTags:
@@ -23,3 +23,19 @@ mediasoup:
     - kind: "video"
       mimeType: "video/VP8"
       clockRate: 90000
+  # A few things to note:
+  # - The number of WebRTC servers created will match the number of entries listed here.
+  # - At least one listenInfo must be declared for each webrtc server.
+  # - The same port must be used for all listenInfo entries (TCP and UDP).
+  # - A single port cannot be shared across multiple webRtcServerSettings.
+  # - Use announcedAddress to specify the address that will appear in the SDP if needed.
+  webRtcServerSettings:
+    - listenInfos:
+        - ip: "127.0.0.1"
+          protocol: "udp"
+          port: 5000
+          # announcedAddress:
+        - ip: "127.0.0.1"
+          protocol: "tcp"
+          port: 5000
+          # announcedAddress:
