@@ -2,8 +2,8 @@ FROM node:18-bullseye-slim as builder
 
 WORKDIR /app
 
-# ARG NPM_TOKEN
-# ENV NPM_TOKEN=$NPM_TOKEN
+ARG host
+ENV VITE_MEDIA_SERVER_HOST=$host
 
 COPY . .
 
