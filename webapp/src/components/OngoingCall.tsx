@@ -1,7 +1,9 @@
-import { Component, createSignal, For, onCleanup, Show } from 'solid-js';
+import { Component, createSignal, For, Show } from 'solid-js';
 import { ObservedGetOngoingCallResponse, ObserverGetCallStatsResponse } from '../utils/MessageProtocol';
 import { TableContainer, Paper, Table, TableBody, TableRow, TableCell, Button } from '@suid/material';
 import Box from './Box';
+import { AutoRefreshBar } from '../AutoRefreshBar';
+import { clientStore } from '../stores/LocalClientStore';
 
 type OngoingCallProps = ObservedGetOngoingCallResponse['calls'][number];
 
@@ -43,21 +45,14 @@ const OngoingCall: Component<OngoingCallProps> = (props) => {
 		</TableRow>
 	);
 
-	const timer = setInterval(async () => {
-		if (!window.call) return;
-
-		const newFetchedStats = await window.call.getCallStats(props.callId);
-
-		// console.warn('newFetchedStats', newFetchedStats);
-
-		setFetchedStats(newFetchedStats);
-	}, 1000);
-
-	onCleanup(() => {
-		clearInterval(timer);
-	});
 	return (
 		<Box full={true} title={props.callId.slice(0, -8) + '********'}>
+			<AutoRefreshBar durationInS={10} onComplete={() => {
+				clientStore.call?.getCallStats(props.callId)
+					.then(setFetchedStats)
+					.catch(console.error);
+			}}
+			/>
 			<TableContainer component={Paper}>
 				<Table sx={{ minWidth: 650 }} aria-label="simple table">
 					<TableBody>
@@ -75,6 +70,8 @@ const OngoingCall: Component<OngoingCallProps> = (props) => {
 												<ShowButtonRow label="Peer Connection" id={peerConnection.peerConnectionId} />
 												<Show when={selectedIds().includes(peerConnection.peerConnectionId)}>
 													<Row label="Avg RTT [ms]" value={peerConnection.avgRttInMs} indent={2} />
+													<Row label="Score" value={peerConnection?.peerConnectionScore?.score} indent={2} />
+													<Row label="Remarks" value={peerConnection.peerConnectionScore?.remarks.map(r => r.text).join(', ')} indent={2} />
 													<For each={peerConnection.inboundAudioTracks}>{track => (
 														<>
 															<ShowButtonRow label="Inbound Audio Track" id={track.trackId} />

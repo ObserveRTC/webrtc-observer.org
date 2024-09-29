@@ -91,11 +91,12 @@ export function createObserverRequestListener(listenerContext: ClientMonitorSamp
 							clientScore: client.score,
 							peerConnections: [],
 						};
+						// logger.info('Client: %o', client);
 						for (const peerConnection of client.peerConnections.values()) {
 							const peerConnectionStats: ObserverGetCallStatsResponse['clients'][number]['peerConnections'][number] = {
 								peerConnectionId: peerConnection.peerConnectionId,
 								peerConnectionScore: peerConnection.score,
-								avgRttInMs: peerConnection.avgRttInMs ?? -1,
+								avgRttInMs: peerConnection.avgRttInMs ?? 0,
 								inboundAudioTracks: [],
 								inboundVideoTracks: [],
 								outboundAudioTracks: [],
@@ -108,6 +109,7 @@ export function createObserverRequestListener(listenerContext: ClientMonitorSamp
 									receivingBitrate: track.bitrate,
 									totalLostPackets: track.totalLostPackets,
 								});
+								// logger.debug('InboundAudioTrack: %o', track);
 							}
 							for (const track of peerConnection.inboundVideoTracks.values()) {
 								peerConnectionStats.inboundVideoTracks.push({
@@ -116,6 +118,7 @@ export function createObserverRequestListener(listenerContext: ClientMonitorSamp
 									receivingBitrate: track.bitrate,
 									totalLostPackets: track.totalLostPackets,
 								});
+								// logger.debug('InboundVideoTrack: %o', track);
 							}
 							for (const track of peerConnection.outboundAudioTracks.values()) {
 								peerConnectionStats.outboundAudioTracks.push({
@@ -123,6 +126,7 @@ export function createObserverRequestListener(listenerContext: ClientMonitorSamp
 									trackScore: track.score,
 									sendingBitrate: track.sendingBitrate,
 								});
+								// logger.debug('OutboundAudioTrack: %o', track);
 							}
 							for (const track of peerConnection.outboundVideoTracks.values()) {
 								peerConnectionStats.outboundVideoTracks.push({
@@ -130,8 +134,10 @@ export function createObserverRequestListener(listenerContext: ClientMonitorSamp
 									trackScore: track.score,
 									sendingBitrate: track.sendingBitrate,
 								});
+								// logger.debug('OutboundVideoTrack: %o', track);
 							}
 							clientStats.peerConnections.push(peerConnectionStats);
+							// logger.debug('PeerConnection: %o', peerConnectionStats);
 						}
 						reply.clients.push(clientStats);
 					}
