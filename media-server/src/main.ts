@@ -2,22 +2,23 @@ import { Server } from "./Server";
 import process from'process';
 import { createLogger } from "./common/logger";
 import { ClientMessage } from "./protocols/MessageProtocol";
-import { ClientMessageListener } from "./listeners/ClientMessageListener";
+import { ClientMessageListener } from "./client-listeners/ClientMessageListener";
 import { config, getConfigString } from "./config";
-import { createCreateTransportRequestListener } from "./listeners/CreateTransportRequestListener";
+import { createCreateTransportRequestListener } from "./client-listeners/CreateTransportRequestListener";
 import { MediasoupService } from "./services/MediasoupService";
-import { createControlProducerNotificationListener } from "./listeners/ControlProducerNotificationListener";
-import { createControlConsumerNotificationListener } from "./listeners/ControlConsumerNotificationListener";
-import { createCreateProducerRequestListener } from "./listeners/CreateProducerRequestListener";
+import { createControlProducerNotificationListener } from "./client-listeners/ControlProducerNotificationListener";
+import { createControlConsumerNotificationListener } from "./client-listeners/ControlConsumerNotificationListener";
+import { createCreateProducerRequestListener } from "./client-listeners/CreateProducerRequestListener";
 import { ClientContext } from "./common/ClientContext";
 import { createObserver } from "@observertc/observer-js";
-import { createJoinCallRequestListener } from "./listeners/JoinCallRequestListener";
-import { createControlTransportNotificationListener } from "./listeners/ControlTransportNotificationListener";
-import { createConnectTransportRequestListener } from "./listeners/ConnectTransportRequestListener";
+import { createJoinCallRequestListener } from "./client-listeners/JoinCallRequestListener";
+import { createControlTransportNotificationListener } from "./client-listeners/ControlTransportNotificationListener";
+import { createConnectTransportRequestListener } from "./client-listeners/ConnectTransportRequestListener";
 import { ClientSampleDecoder as LatestClientSampleDecoder, schemaVersion as latestSchemaVersion } from "@observertc/samples-decoder";
-import { createClientMonitorSampleNotificatinListener } from "./listeners/ClientMonitorSampleNotificationListener";
-import { createObserverRequestListener } from "./listeners/ObserverRequestListener";
+import { createClientMonitorSampleNotificatinListener } from "./client-listeners/ClientMonitorSampleNotificationListener";
+import { createObserverRequestListener } from "./client-listeners/ObserverRequestListener";
 import { MainEmitter } from "./common/MainEmitter";
+import { createObservedCallLogMonitor } from "./observer-listeners/ObservedCallLogMonitor";
 
 const logger = createLogger('main');
 const clients = new Map<string, ClientContext>();
@@ -91,13 +92,7 @@ const listeners = new Map<ClientMessage['type'], ClientMessageListener>()
     )
     ;
 
-// observer.on('newcall', call => {
-//     call.on('newclient', client => {
-//         client.on('score', score => {
-//             logger.info(`Client ${client.clientId} score: ${score}`);
-//         });
-//     })
-// })
+observer.on('newcall', createObservedCallLogMonitor());
 
 server
     .on('newclient', client => {

@@ -3,7 +3,7 @@ import { WebSocketServer } from 'ws';
 import { createLogger } from "./common/logger";
 import url from 'url';
 import { ClientContext } from './common/ClientContext';
-import { ClientMessageContext } from './listeners/ClientMessageListener';
+import { ClientMessageContext } from './client-listeners/ClientMessageListener';
 import { ClientMessage } from './protocols/MessageProtocol';
 import { EventEmitter } from 'events';
 
