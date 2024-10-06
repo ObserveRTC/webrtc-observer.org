@@ -1,0 +1,121 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mediaserver
+  labels:
+    app: mediaserver
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mediaserver
+  template:
+    metadata:
+      labels:
+        app: mediaserver
+    spec:
+      containers:
+      - name: mediaserver
+        image: "{{ .Values.mediaserver.image }}"
+        imagePullPolicy: Always
+        {{- with .Values.imagePullSecrets }}
+        imagePullSecrets:
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+        env:
+        - name: NODE_ENV
+          value: development
+          name: CONFIG_PATH
+          value: /app/configs/config.yaml
+        ports:
+        - name: ws
+          containerPort: 9081
+          protocol: TCP
+        volumeMounts:
+          - name: mediaserver-config-volume
+            mountPath: /app/configs/config.yaml
+            subPath: config.yaml
+      volumes:
+        - name: mediaserver-config-volume
+          configMap:
+            name: mediaserver-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mediaserver-ws
+  labels:
+    app: mediaserver
+spec:
+  type: LoadBalancer
+  loadBalancerIP: {{ .Values.publicIP }}
+  ports:
+  - port: 9081
+    protocol: TCP
+    name: mediaserver-ws
+  selector:
+    app: mediaserver
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mediaserver-media
+  labels:
+    app: mediaserver
+spec:
+  type: LoadBalancer
+  loadBalancerIP:  {{ .Values.publicIP }}
+  ports:
+  - port: 5000
+    protocol: UDP
+    name: rtc-1
+  - port: 5001
+    protocol: UDP
+    name: rtc-2
+  selector:
+    app: mediaserver
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mediaserver-config
+  labels:
+    app: mediaserver
+data:
+  config.yaml: |
+    server:
+      port: 9081
+      # serverIp: "127.0.0.1"
+      announcedIp: {{ .Values.publicIP }}
+    mediasoup:
+      numberOfWorkers: 2
+      workerSettings:
+        logLevel: "warn"
+        logTags:
+          - "info"
+          - "ice"
+          - "dtls"
+          - "rtp"
+          - "srtp"
+          - "rtcp"
+        rtcMinPort: 40000
+        rtcMaxPort: 41000
+      mediaCodecs:
+        - kind: "audio"
+          mimeType: "audio/opus"
+          clockRate: 48000
+          channels: 2
+        - kind: "video"
+          mimeType: "video/VP8"
+          clockRate: 90000
+    webRtcServerSettings:
+      - listenInfos:
+          - ip: "0.0.0.0"
+            protocol: "udp"
+            port: 5000
+            announcedAddress: {{ .Values.publicIP }}
+      - listenInfos:
+          - ip: "0.0.0.0"
+            protocol: "udp"
+            port: 5001
+            announcedAddress: {{ .Values.publicIP }}

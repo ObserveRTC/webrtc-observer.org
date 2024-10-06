@@ -1,0 +1,23 @@
+# Default values for webrtc-observer-org.
+
+## General
+imagePullSecrets:
+# - name: docker-registry-secret
+domain: webrtc-observer.org
+publicIP: 34.23.220.83
+
+webapp:
+  image: docker.io/levaitamas/webrtc-observer-webapp:latest
+
+mediaserver:
+  image: docker.io/levaitamas/webrtc-observer-mediaserver:latest
+
+netdebug:
+  # set true to deploy an extra debug container along the components
+  enabled: false
+
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""

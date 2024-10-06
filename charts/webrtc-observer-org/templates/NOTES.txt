@@ -1,0 +1,6 @@
+webrtc-observer.org demo on GKE
+
+Documentation: https://github.com/ObserveRTC/webrtc-observer.org/blob/main/README.md
+
+To cleanup:
+helm uninstall {{ .Release.Name }}

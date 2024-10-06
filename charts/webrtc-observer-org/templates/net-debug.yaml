@@ -1,0 +1,23 @@
+{{- if .Values.netdebug.enabled -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: net-debug
+spec:
+  selector:
+    matchLabels:
+      app: net-debug
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: net-debug
+    spec:
+      containers:
+      - name: net-debug
+        image: docker.io/l7mp/net-debug
+        {{- with .Values.imagePullSecrets }}
+        imagePullSecrets:
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+{{- end }}

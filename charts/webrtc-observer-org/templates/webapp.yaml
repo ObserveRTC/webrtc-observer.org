@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webapp
+  labels:
+    app: webapp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: webapp
+  template:
+    metadata:
+      labels:
+        app: webapp
+    spec:
+      containers:
+      - name: webapp
+        image: "{{ .Values.webapp.image }}"
+        imagePullPolicy: Always
+        {{- with .Values.imagePullSecrets }}
+        imagePullSecrets:
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+        # env:
+        #   - name: VITE_MEDIA_SERVER_HOST
+        #     #value: ws://mediaserver-ws:9081
+        #     value: ws://34.49.97.128:9081
+        ports:
+          - name: http
+            containerPort: 3000
+            protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: webapp
+  labels:
+    run: webapp
+spec:
+  type: ClusterIP
+  selector:
+    app: webapp
+  ports:
+  - port: 80
+    targetPort: 3000
+    protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: webapp-ingress
+  annotations:
+    kubernetes.io/ingress.global-static-ip-name: webrtc-observer-org
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    # nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    # nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    # nginx.org/websocket-services: "mediaserver-ws"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - {{ .Values.domain }}
+      secretName: webapp-tls
+  rules:
+  - host: {{ .Values.domain }}
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: webapp
+            port:
+              number: 80
+      # - path: /
+      #   pathType: Prefix
+      #   backend:
+      #     service:
+      #       name: mediaserver-ws
+      #       port:
+      #         number: 9081
