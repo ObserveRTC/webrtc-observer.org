@@ -1,4 +1,4 @@
-FROM node:18-bullseye-slim as builder
+FROM node:18-alpine AS builder
 
 WORKDIR /app
 
@@ -7,7 +7,7 @@ ENV VITE_MEDIA_SERVER_HOST=$host
 
 COPY . .
 
-RUN yarn config set network-timeout 300000 
+RUN yarn config set network-timeout 300000
 RUN yarn install --frozen-lockfile
 # RUN yarn add --dev eslint-config-react-app
 # RUN yarn add --dev eslint-plugin-import
@@ -17,6 +17,6 @@ FROM nginx:stable-alpine
 
 COPY --from=builder /app/build /usr/share/nginx/html
 COPY ./nginx.conf /etc/nginx/nginx.conf
-EXPOSE 80
+EXPOSE 3000
 
 CMD ["nginx", "-g", "daemon off;"]
