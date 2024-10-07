@@ -53,30 +53,40 @@ metadata:
   annotations:
     kubernetes.io/ingress.global-static-ip-name: webrtc-observer-org
     cert-manager.io/cluster-issuer: letsencrypt-prod
-    # nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
-    # nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
-    # nginx.org/websocket-services: "mediaserver-ws"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.org/websocket-services: "mediaserver-ws"
 spec:
   ingressClassName: nginx
   tls:
     - hosts:
-        - {{ .Values.domain }}
+        - {{ .Values.webdomain }}
+        - {{ .Values.mediadomain }}
       secretName: webapp-tls
+  defaultBackend:
+    service:
+      name: webapp
+      port:
+        number: 80
   rules:
-  - host: {{ .Values.domain }}
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: webapp
-            port:
-              number: 80
-      # - path: /
-      #   pathType: Prefix
-      #   backend:
-      #     service:
-      #       name: mediaserver-ws
-      #       port:
-      #         number: 9081
+    - host: {{ .Values.webdomain }}
+      http:
+        paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: webapp
+              port:
+                number: 80
+    - host: {{ .Values.mediadomain }}
+      http:
+        paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: mediaserver-ws
+              port:
+                number: 443

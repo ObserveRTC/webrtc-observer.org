@@ -15,6 +15,7 @@ kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/
 - nginx-controller ([docs](https://kubernetes.github.io/ingress-nginx/deploy/#gce-gke))
 ```console
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.11.2/deploy/static/provider/cloud/deploy.yaml
+kubectl patch configmap -n ingress-nginx ingress-nginx-controller -p '{"data":{"allow-snippet-annotations": "true"}}'
 ```
 
 - stunner-gateway-operator ([docs](https://docs.l7mp.io/en/stable/INSTALL/))

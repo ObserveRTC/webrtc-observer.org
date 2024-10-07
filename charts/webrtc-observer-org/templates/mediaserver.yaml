@@ -47,10 +47,10 @@ metadata:
   labels:
     app: mediaserver
 spec:
-  type: LoadBalancer
-  loadBalancerIP: {{ .Values.publicIP }}
+  type: ClusterIP
   ports:
-  - port: 9081
+  - port: 443
+    targetPort: 9081
     protocol: TCP
     name: mediaserver-ws
   selector:

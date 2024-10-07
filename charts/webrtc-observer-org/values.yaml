@@ -3,7 +3,9 @@
 ## General
 imagePullSecrets:
 # - name: docker-registry-secret
-domain: webrtc-observer.org
+
+webdomain: www.webrtc-observer.org
+mediadomain: media.webrtc-observer.org
 publicIP: 34.23.220.83
 
 webapp:

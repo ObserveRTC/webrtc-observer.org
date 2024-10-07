@@ -31,7 +31,7 @@ jobs:
         cd webapp
         docker build \
           --tag docker.io/levaitamas/webrtc-observer-webapp \
-          --build-arg host="wss://webrtc-observer.org:9081" \
+          --build-arg host="wss://media.webrtc-observer.org:443" \
           .
         cd ../media-server
         docker build \
