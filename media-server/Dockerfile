@@ -7,4 +7,5 @@ COPY package.json yarn.lock ./
 RUN yarn
 COPY . .
 RUN yarn build
+ENV DEBUG="mediasoup*"
 CMD ["node", "lib/main.js"]

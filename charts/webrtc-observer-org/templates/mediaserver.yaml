@@ -90,7 +90,7 @@ data:
     mediasoup:
       numberOfWorkers: 2
       workerSettings:
-        logLevel: "warn"
+        logLevel: "debug"
         logTags:
           - "info"
           - "ice"
