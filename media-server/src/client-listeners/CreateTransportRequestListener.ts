@@ -70,6 +70,8 @@ export function createCreateTransportRequestListener(listenerContext: CreateTran
 						};
 					}
 					
+					logger.info(`Creating ${role} transport for client ${client.clientId}, userId: ${client.userId} with options: %o`, transportOptions);
+
 					const transport = await router.createWebRtcTransport(transportOptions);
 
 					transport.observer.once('close', () => {

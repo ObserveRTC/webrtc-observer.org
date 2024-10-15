@@ -1,7 +1,7 @@
 server:
   port: 9080
   serverIp: "127.0.0.1"
-  # announcedIp: "127.0.0.1"
+  announcedIp: 127.0.0.1
 mediasoup:
   numberOfWorkers: 1
   workerSettings:
@@ -29,13 +29,13 @@ mediasoup:
   # - The same port must be used for all listenInfo entries (TCP and UDP).
   # - A single port cannot be shared across multiple webRtcServerSettings.
   # - Use announcedAddress to specify the address that will appear in the SDP if needed.
-  webRtcServerSettings:
-    - listenInfos:
-        - ip: "127.0.0.1"
-          protocol: "udp"
-          port: 5000
-          # announcedAddress:
-        - ip: "127.0.0.1"
-          protocol: "tcp"
-          port: 5000
-          # announcedAddress:
+  # webRtcServerSettings:
+  #   - listenInfos:
+  #       - ip: 0.0.0.0
+  #         protocol: "udp"
+  #         port: 5000
+  #         announcedAddress: 127.0.0.1
+  # - ip: "127.0.0.1"
+  #   protocol: "tcp"
+  #   port: 5000
+  # announcedAddress:

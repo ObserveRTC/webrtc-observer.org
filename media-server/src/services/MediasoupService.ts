@@ -56,7 +56,7 @@ export class MediasoupService {
 				...this.config.workerSettings,
 				appData: {
 					webRtcServer: undefined,
-				}
+				},
 			});
 			const webrtcServerOptions = this.config.webRtcServerSettings?.[i];
 
@@ -79,7 +79,7 @@ export class MediasoupService {
 					}
 				});
 
-				logger.info(`Worker ${worker.pid} created with webrtc server on port ${port}`);
+				logger.info(`Worker ${worker.pid} created with webrtc server on port ${port} webrtc server options: %o`, webrtcServerOptions);
 			}
 			
 			worker.once('died', () => {

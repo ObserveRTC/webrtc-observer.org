@@ -4,6 +4,7 @@ import type { MediasoupServiceConfig } from './services/MediasoupService';
 import type { ServerConfig } from './Server';
 
 export type Config = {
+    configPath?: string;
     server: ServerConfig,
     mediasoup: MediasoupServiceConfig;
 };
@@ -13,6 +14,7 @@ const getDefaultConfig: () => Config = () => {
         server: {
             port: 9080,
             serverIp: '127.0.0.1',
+            // announcedIp: '127.0.0.1',
         },
         mediasoup: {
             numberOfWorkers: 1,
@@ -40,16 +42,11 @@ const getDefaultConfig: () => Config = () => {
                     listenInfos: [
                         {
                             ip: '127.0.0.1',
+                            // ip: '0.0.0.0',
                             protocol: 'udp',
-                            // announcedAddress
+                            // announcedAddress: '127.0.0.1',
                             port: 5000
                         },
-                        {
-                            ip: '127.0.0.1',
-                            protocol: 'tcp',
-                            // announcedAddress
-                            port: 5000,
-                        }
                     ]
                 }
             ]
@@ -68,6 +65,7 @@ export const config: Config = (() => {
 	if (configPath) {
 		const fileContent = fs.readFileSync(configPath, 'utf-8');
 
+        result.configPath = configPath;
 		Object.assign(result, YAML.parse(fileContent));
 	}
 	

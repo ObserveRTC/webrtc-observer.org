@@ -85,7 +85,7 @@ data:
   config.yaml: |
     server:
       port: 9081
-      # serverIp: "127.0.0.1"
+      serverIp: {{ .Values.publicIP }}
       announcedIp: {{ .Values.publicIP }}
     mediasoup:
       numberOfWorkers: 2
