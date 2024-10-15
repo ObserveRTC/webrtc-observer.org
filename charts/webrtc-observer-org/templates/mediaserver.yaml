@@ -108,14 +108,14 @@ data:
         - kind: "video"
           mimeType: "video/VP8"
           clockRate: 90000
-    webRtcServerSettings:
-      - listenInfos:
-          - ip: "0.0.0.0"
-            protocol: "udp"
-            port: 5000
-            announcedAddress: {{ .Values.publicIP }}
-      - listenInfos:
-          - ip: "0.0.0.0"
-            protocol: "udp"
-            port: 5001
-            announcedAddress: {{ .Values.publicIP }}
+      webRtcServerSettings:
+        - listenInfos:
+            - ip: "0.0.0.0"
+              protocol: "udp"
+              port: 5000
+              announcedAddress: {{ .Values.publicIP }}
+        - listenInfos:
+            - ip: "0.0.0.0"
+              protocol: "udp"
+              port: 5001
+              announcedAddress: {{ .Values.publicIP }}
