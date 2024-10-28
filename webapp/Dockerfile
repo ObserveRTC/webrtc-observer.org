@@ -5,6 +5,9 @@ WORKDIR /app
 ARG host
 ENV VITE_MEDIA_SERVER_HOST=$host
 
+ARG relay
+ENV VITE_RELAY_SERVER_HOST=$relay
+
 COPY . .
 
 RUN yarn config set network-timeout 300000

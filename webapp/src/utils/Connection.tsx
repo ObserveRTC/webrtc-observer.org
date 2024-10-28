@@ -127,6 +127,8 @@ export class Connection extends EventEmitter {
 		} = await this._request('join-call-request', {
 			callId: this.config.callId,
 		});
+
+		// console.warn('iceServers', iceServers);
 		
 		if (!this.config.callId) {
 			if (!callId) throw new Error('Call ID is not provided');
@@ -261,7 +263,7 @@ export class Connection extends EventEmitter {
 	
 		const transport = this._device[method]({ 
 			...transportOptions, 
-			iceServers: undefined, 
+			iceServers, 
 			iceTransportPolicy: this.config.forceRelay ? 'relay' : 'all' 
 		});
 	
