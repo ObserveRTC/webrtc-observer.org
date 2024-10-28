@@ -61,9 +61,10 @@ export type JoinCallResponsePayload = {
     callId: string,
     readonly rtpCapabilities: mediasoup.types.RtpCapabilities,
     iceServers: {
-        urls: string
-        credential?: string
-        username?: string
+        credential: string;
+        credentialType: 'password';
+        urls: string | string[];
+        username: string;
     }[],
 }
 

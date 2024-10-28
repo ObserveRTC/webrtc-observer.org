@@ -83,7 +83,7 @@ export function createCreateTransportRequestListener(listenerContext: CreateTran
 					else if (role === 'consuming') client.rcvTransport = transport;
 					
 					logger.debug(`Transport ${transport.id} iceCandidates: %s`, JSON.stringify(transport.iceCandidates, null, 2))
-
+					
 					response = {
 						dtlsParameters: transport.dtlsParameters,
 						iceCandidates: transport.iceCandidates,

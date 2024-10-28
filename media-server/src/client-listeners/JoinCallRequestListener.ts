@@ -38,6 +38,12 @@ export function createJoinCallRequestListener(listenerContext: JoinCallRequestLi
 					
 					client.routerId = router.id;
 
+					const turnResponse = (await fetch(`http://stunner-auth.stunner-system:8088?service=turn`)).json();
+
+					logger.info(`Turn response: %o`, turnResponse);
+					
+					// http://stunner-auth.stunner-system:8088?service=turn
+
 					response = {
 						callId: router.id,
 						rtpCapabilities: router.rtpCapabilities,
