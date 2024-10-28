@@ -11,6 +11,13 @@ export type JoinCallRequestListenerContext = {
 		clients: Map<string, ClientContext>;
 }
 
+type TurnServerConfig = {
+	password: string;
+	ttl: number;
+	uris: string[];
+	username: string;
+  };
+
 export function createJoinCallRequestListener(listenerContext: JoinCallRequestListenerContext) {
 		const { 
 			mediasoupService,
@@ -38,16 +45,22 @@ export function createJoinCallRequestListener(listenerContext: JoinCallRequestLi
 					
 					client.routerId = router.id;
 
-					const turnResponse = (await fetch(`http://stunner-auth.stunner-system:8088?service=turn`)).json();
+					const turnResponse = await (await fetch(`http://stunner-auth.stunner-system:8088?service=turn`)).json();
+					const turnConfig = (await turnResponse) as TurnServerConfig;
 
-					logger.info(`Turn response: %o`, turnResponse);
+					logger.info(`Turn response: %o`, turnConfig);
 					
 					// http://stunner-auth.stunner-system:8088?service=turn
 
 					response = {
 						callId: router.id,
 						rtpCapabilities: router.rtpCapabilities,
-						iceServers: [],
+						iceServers: [{
+							credential: turnConfig.password,
+							credentialType: 'password',
+							urls: turnConfig.uris,
+							username: turnConfig.username,
+						}],
 					};
 					
 					logger.info(`Client ${client.clientId} joined call ${router.id}`);
