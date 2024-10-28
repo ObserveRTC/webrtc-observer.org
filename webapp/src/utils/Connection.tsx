@@ -128,7 +128,7 @@ export class Connection extends EventEmitter {
 			callId: this.config.callId,
 		});
 
-		// console.warn('iceServers', iceServers);
+		console.warn('iceServers', iceServers);
 		
 		if (!this.config.callId) {
 			if (!callId) throw new Error('Call ID is not provided');
