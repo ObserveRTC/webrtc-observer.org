@@ -30,6 +30,9 @@ type ConsumerAppData = {
 	remoteClosed?: boolean;
 }
 
+import dns from 'dns';
+import os from 'os';
+
 export class MediasoupService {
 	private _run = false;
 	public readonly workers = new Map<number, mediasoup.types.Worker<WorkerAppData>>();
@@ -39,6 +42,7 @@ export class MediasoupService {
 	public readonly mediaConsumers = new Map<string, mediasoup.types.Consumer<ConsumerAppData>>();
 	public readonly dataProducers = new Map<string, mediasoup.types.DataProducer>();
 	public readonly dataConsumers = new Map<string, mediasoup.types.DataConsumer>();
+	private _announcedAddress?: string;
 
 	public constructor(
 		public readonly config: MediasoupServiceConfig
@@ -50,6 +54,11 @@ export class MediasoupService {
 		if (this._run) return;
 		this._run = true;
 		const webrtcServerListeningPorts = new Set<number>();
+		const address = await dns.promises.lookup(os.hostname());
+		
+		this._announcedAddress = address.address;
+
+		logger.info(`Announced address: ${this._announcedAddress}`);
 
 		for (let i = 0; i < this.config.numberOfWorkers; i++) {
 			const worker = await mediasoup.createWorker<WorkerAppData>({
@@ -71,6 +80,12 @@ export class MediasoupService {
 				}
 				if (!port) throw new Error('Port is not provided for webrtc server');
 				else if (webrtcServerListeningPorts.has(port)) throw new Error(`Port ${port} is already used by another webrtc server`);
+
+				if (this._announcedAddress) {
+					for (const info of webrtcServerOptions.listenInfos) {
+						info.announcedAddress = this._announcedAddress;
+					}
+				}
 
 				worker.appData.webRtcServer = await worker.createWebRtcServer({
 					...webrtcServerOptions,
