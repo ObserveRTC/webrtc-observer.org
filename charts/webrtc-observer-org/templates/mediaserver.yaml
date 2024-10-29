@@ -63,8 +63,8 @@ metadata:
   labels:
     app: mediaserver
 spec:
-  type: LoadBalancer
-  loadBalancerIP:  {{ .Values.publicIP }}
+  type: ClusterIP
+  # loadBalancerIP:  {{ .Values.publicIP }}
   ports:
   - port: 5000
     protocol: UDP
