@@ -1,7 +1,6 @@
 import { Switch, type Component, Match } from 'solid-js';
 import { page } from './signals/signals';
 import Join from './views/Join';
-import Results from './views/Results';
 import { Transition } from 'solid-transition-group';
 import ObserverView from './views/OngoingCalls';
 import { Grid } from '@suid/material';
