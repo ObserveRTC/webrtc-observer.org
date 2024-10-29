@@ -1,6 +1,7 @@
 import { createSignal } from 'solid-js';
 
 export type Page = 
+    | 'main'
     | 'lobby' 
     | 'stunner'
     | 'videoCall' 
