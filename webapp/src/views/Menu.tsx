@@ -1,4 +1,4 @@
-import { createSignal, onMount, type Component } from 'solid-js';
+import { createSignal, type Component } from 'solid-js';
 import Box from '../components/Box';
 import { Button } from '@suid/material';
 import { setPage } from '../signals/signals';
@@ -13,7 +13,7 @@ import { writeClipboard } from '@solid-primitives/clipboard';
 
 const Menu: Component = () => {
 	const [ copyBtnText, setCopyBtnText ] = createSignal<string | undefined>(clientStore.call?.callId);
-	onMount(() => setPage('lobby'));
+	// onMount(() => setPage('lobby'));
     
 	return (
 		<Box title="">

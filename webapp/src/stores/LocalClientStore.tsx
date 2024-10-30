@@ -1,5 +1,6 @@
 import { createStore } from 'solid-js/store';
 import { Connection } from '../utils/Connection';
+import { getRandomUserId } from '../common/utils';
 
 type SavedMediaDevice = {
 	deviceId: string;
@@ -28,6 +29,7 @@ export const [clientStore, setClientStore] = createStore<LocalClientStore>({
 	updateInProgress: false,
 	audioDevices: [],
 	videoDevices: [],
+	userId: getRandomUserId(),
 });
 
 export async function updateClientMediaDevices(): Promise<void> {

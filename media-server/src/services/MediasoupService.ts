@@ -16,8 +16,13 @@ type WorkerAppData = {
 	webRtcServer?: mediasoup.types.WebRtcServer<{ port: number }>;
 }
 
-type RouterAppData = {
+export type RouterAppData = {
 	workerPid: number;
+	mediaProducers: Map<string, mediasoup.types.Producer<ProducerAppData>>;
+	mediaConsumers: Map<string, mediasoup.types.Consumer<ConsumerAppData>>;
+	dataProducers: Map<string, mediasoup.types.DataProducer>;
+	dataConsumers: Map<string, mediasoup.types.DataConsumer>;
+	transports: Map<string, mediasoup.types.Transport>;
 }
 
 type ProducerAppData = {
@@ -116,7 +121,7 @@ export class MediasoupService {
 		}
 	}
 
-	public async getOrCreateRouter(routerId?: string): Promise<mediasoup.types.Router> {		
+	public async getOrCreateRouter(routerId?: string): Promise<mediasoup.types.Router<RouterAppData>> {		
 		if (!this.workers) throw new Error('Worker is not started');
 		
 		let router = this.routers.get(routerId || '');
@@ -124,26 +129,31 @@ export class MediasoupService {
 		if (router) return router;
 
 		const worker = [...this.workers.values()][Math.floor(Math.random() * this.workers.size)];
-		router = await worker.createRouter<RouterAppData>({
+		const newrouter = await worker.createRouter<RouterAppData>({
 			mediaCodecs: this.config.mediaCodecs,
 			appData: {
 				workerPid: worker.pid,
+				dataConsumers: new Map(),
+				dataProducers: new Map(),
+				mediaConsumers: new Map(),
+				mediaProducers: new Map(),
+				transports: new Map(),
 			}
 		});
 
-		const addTransport = (transport: mediasoup.types.Transport) => this._addTransport(router!, transport);
+		const addTransport = (transport: mediasoup.types.Transport) => this._addTransport(newrouter, transport);
 
-		router.observer.once('close', () => {
-			router.observer.off('newtransport', addTransport);
-			this.routers.delete(router!.id);
+		newrouter.observer.once('close', () => {
+			newrouter.observer.off('newtransport', addTransport);
+			this.routers.delete(newrouter.id);
 
-			logger.info(`Router ${router!.id} closed`);
+			logger.info(`Router ${newrouter.id} closed`);
 		})
-		router.observer.on('newtransport', addTransport);
-		this.routers.set(router.id, router);
+		newrouter.observer.on('newtransport', addTransport);
+		this.routers.set(newrouter.id, newrouter);
 
-		logger.info(`Router ${router.id} created`);
-		return router;
+		logger.info(`Router ${newrouter.id} created`);
+		return newrouter;
 	}
 
 	public async consumeMediaProducer(producerId: string, consumingClient: ClientContext): Promise<mediasoup.types.Consumer> {
@@ -198,7 +208,7 @@ export class MediasoupService {
 		return consumer;
 	};
 
-	private _addTransport = (router: mediasoup.types.Router, transport: mediasoup.types.Transport) => {
+	private _addTransport = (router: mediasoup.types.Router<RouterAppData>, transport: mediasoup.types.Transport) => {
 		
 		const addProducer = (producer: mediasoup.types.Producer) => this._addProducer(router, transport, producer);
 		const addConsumer = (consumer: mediasoup.types.Consumer) => this._addConsumer(router, transport, consumer);
@@ -211,6 +221,7 @@ export class MediasoupService {
 			transport.observer.off('newdataproducer', addDataProducer);
 			transport.observer.off('newdataconsumer', addDataConsumer);
 
+			router.appData.transports.delete(transport.id);
 			this.transports.delete(transport.id);
 
 			logger.info(`Transport ${transport.id} closed on router ${router.id}. the number of transports is ${this.transports.size}`);
@@ -225,14 +236,16 @@ export class MediasoupService {
 		transport.observer.on('newdataproducer', addDataProducer);
 		transport.observer.on('newdataconsumer', addDataConsumer);
 
+		router.appData.transports.set(transport.id, transport);
 		this.transports.set(transport.id, transport);
 
 		logger.info(`Transport ${transport.id} created on router ${router.id}`);
 
 	}
 
-	private _addProducer = (router: mediasoup.types.Router, transport: mediasoup.types.Transport, producer: mediasoup.types.Producer) => {
+	private _addProducer = (router: mediasoup.types.Router<RouterAppData>, transport: mediasoup.types.Transport, producer: mediasoup.types.Producer) => {
 		producer.observer.once('close', () => {
+			router.appData.mediaProducers.delete(producer.id);
 			this.mediaProducers.delete(producer.id);
 
 			logger.info(`Producer ${producer.id} closed on transport ${transport.id} on router ${router.id}`);
@@ -241,39 +254,47 @@ export class MediasoupService {
 		producer.appData.routerId = router.id;
 		producer.appData.transportId = transport.id;
 		producer.appData.remoteClosed = false;
+
+		router.appData.mediaProducers.set(producer.id, producer as mediasoup.types.Producer<ProducerAppData>);
 		this.mediaProducers.set(producer.id, producer as mediasoup.types.Producer<ProducerAppData>);
 
 		logger.info(`Producer ${producer.id} created on transport ${transport.id} on router ${router.id}`);
 	}
 
-	private _addConsumer = (router: mediasoup.types.Router, transport: mediasoup.types.Transport, consumer: mediasoup.types.Consumer) => {
+	private _addConsumer = (router: mediasoup.types.Router<RouterAppData>, transport: mediasoup.types.Transport, consumer: mediasoup.types.Consumer) => {
 		consumer.observer.once('close', () => {
+			router.appData.mediaConsumers.delete(consumer.id);
 			this.mediaConsumers.delete(consumer.id);
 
 			logger.info(`Consumer ${consumer.id} closed on transport ${transport.id} on router ${router.id}`);
 		});
+		router.appData.mediaConsumers.set(consumer.id, consumer);
 		this.mediaConsumers.set(consumer.id, consumer);
 
 		logger.info(`Consumer ${consumer.id} created on transport ${transport.id} on router ${router.id}`);
 	}
 
-	private _addDataProducer = (router: mediasoup.types.Router, transport: mediasoup.types.Transport, dataProducer: mediasoup.types.DataProducer) => {
+	private _addDataProducer = (router: mediasoup.types.Router<RouterAppData>, transport: mediasoup.types.Transport, dataProducer: mediasoup.types.DataProducer) => {
 		dataProducer.observer.once('close', () => {
+			router.appData.dataProducers.delete(dataProducer.id);
 			this.dataProducers.delete(dataProducer.id);
 
 			logger.info(`Data producer ${dataProducer.id} closed on transport ${transport.id} on router ${router.id}`);
 		});
+		router.appData.dataProducers.set(dataProducer.id, dataProducer);
 		this.dataProducers.set(dataProducer.id, dataProducer);
 
 		logger.info(`Data producer ${dataProducer.id} created on transport ${transport.id} on router ${router.id}`);
 	}
 
-	private _addDataConsumer = (router: mediasoup.types.Router, transport: mediasoup.types.Transport, dataConsumer: mediasoup.types.DataConsumer) => {
+	private _addDataConsumer = (router: mediasoup.types.Router<RouterAppData>, transport: mediasoup.types.Transport, dataConsumer: mediasoup.types.DataConsumer) => {
 		dataConsumer.observer.once('close', () => {
+			router.appData.dataConsumers.delete(dataConsumer.id);
 			this.dataConsumers.delete(dataConsumer.id);
 
 			logger.info(`Data consumer ${dataConsumer.id} closed on transport ${transport.id} on router ${router.id}`);
 		});
+		router.appData.dataConsumers.set(dataConsumer.id, dataConsumer);
 		this.dataConsumers.set(dataConsumer.id, dataConsumer);
 
 		logger.info(`Data consumer ${dataConsumer.id} created on transport ${transport.id} on router ${router.id}`);

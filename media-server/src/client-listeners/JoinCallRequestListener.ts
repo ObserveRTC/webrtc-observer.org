@@ -9,6 +9,7 @@ const logger = createLogger('JoinCallRequestListener');
 export type JoinCallRequestListenerContext = {
 		mediasoupService: MediasoupService;
 		clients: Map<string, ClientContext>;
+		maxTransportsPerRouter: number;
 }
 
 type TurnServerConfig = {
@@ -37,12 +38,22 @@ export function createJoinCallRequestListener(listenerContext: JoinCallRequestLi
 
 				logger.debug(`Client ${client.clientId} joining call ${request.callId}. request: %o`, request);
 
+				let closeClient = false;
 				let response: JoinCallResponsePayload | undefined;
 				let error: string | undefined;
 				
 				try {
+					if (request.callId && mediasoupService.routers.has(request.callId) === false) {
+						throw new Error(`Call with id ${request.callId} does not exist`);
+					}
+
 					const router = await mediasoupService.getOrCreateRouter(request.callId);
-					
+
+					if (listenerContext.maxTransportsPerRouter <= router.appData.transports.size) {
+						closeClient = true;
+						throw new Error(`Max transports per router reached`);
+					}
+
 					client.routerId = router.id;
 
 					const turnResponse = await (await fetch(`http://stunner-auth.stunner-system:8088?service=turn`)).json();
@@ -75,6 +86,10 @@ export function createJoinCallRequestListener(listenerContext: JoinCallRequestLi
 					response,
 					error
 				));
+
+				if (closeClient) {
+					client.webSocket.close();
+				}
 		};
 		return result;
 }

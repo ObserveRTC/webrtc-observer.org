@@ -6,8 +6,6 @@ import DeviceSelector from '../components/DeviceSelector';
 import LocalClientVideo from '../components/LocalClientVideo';
 import { clientStore, setClientStore, updateClientMedia } from '../stores/LocalClientStore';
 import { ErrorPaperItem } from '../components/PaperItem';
-import { setPage } from '../signals/signals';
-import Configuration from '../components/Configuration';
 import { TextField } from '@suid/material';
 import { callConfig, setCallConfig } from '../stores/callConfigStore';
 
@@ -15,10 +13,12 @@ const Join: Component = () => {
 	const [ error, setError ] = createSignal<string | undefined>();
 	const [ inProgress, setInProgress ] = createSignal(false);
 	
-	onMount(() => updateClientMedia({}));
-
+	onMount(() => {
+		updateClientMedia({});
+		setCallConfig({ ...callConfig,  });
+	});
 	return (
-		<Box title="Join to a Call">
+		<Box title="Join to a Call" popoverText='Popover'>
 			<Show when={error()}>
 				<ErrorPaperItem>{error()}</ErrorPaperItem>
 			</Show>
@@ -52,14 +52,15 @@ const Join: Component = () => {
 			<TextField 
 				label='CallId'
 				value={callConfig.callId}
+				helperText="Optional. If not provided, a new call will be created."
 				onChange={(e) => setCallConfig({ ...callConfig, callId: e.currentTarget.value })}
 			/>
-			<TextField 
+			{/* <TextField 
 				label='UserId'
 				value={clientStore.userId}
 				onChange={(e) => setClientStore({ ...clientStore, userId: e.currentTarget.value })}
-			/>
-			<Configuration setCallConfig={setCallConfig} getCallConfig={() => callConfig} />
+			/> */}
+			{/* <Configuration setCallConfig={setCallConfig} getCallConfig={() => callConfig} /> */}
 			<Button
 				title='Join'
 				onClick={() => {
@@ -67,9 +68,9 @@ const Join: Component = () => {
 					joinToCall(JSON.parse(JSON.stringify(callConfig)))
 						.then(() => {
 							setClientStore({ ...clientStore, call: window.call });
-							setPage('videoCall');
+							// setPage('videoCall');
 						})
-						.catch(setError)
+						.catch(err => setError(err ? `${err}` : 'Unknown error'))
 						.finally(() => setInProgress(false));
 				}}
 				disabled={ clientStore.updateInProgress || inProgress() }

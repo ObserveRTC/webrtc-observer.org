@@ -35,6 +35,7 @@ const listeners = new Map<ClientMessage['type'], ClientMessageListener>()
     .set('join-call-request', createJoinCallRequestListener({
         mediasoupService,
         clients,
+        maxTransportsPerRouter: config.maxTransportsPerRouter,
     }))
     .set('connect-transport-request', createConnectTransportRequestListener({
         mediasoupService,
@@ -66,6 +67,7 @@ const listeners = new Map<ClientMessage['type'], ClientMessageListener>()
         createCreateProducerRequestListener({
             clients,
             mediasoupService,
+            maxProducerPerClients: config.maxProducerPerClients,
         })
     )
     .set(

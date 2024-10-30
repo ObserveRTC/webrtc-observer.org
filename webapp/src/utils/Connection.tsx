@@ -32,6 +32,7 @@ export type ConnectionConfig = {
 	monitor: ClientMonitorConfig;
 	callId?: string;
 	forceRelay?: boolean;
+	userId?: string,
 }
 
 export type ConnectionEventMap = {
@@ -107,6 +108,7 @@ export class Connection extends EventEmitter {
 					`${this.config.serverUri}?${[
 						['schemaVersion', schemaVersion],
 						['clientId', this.config.clientId],
+						['userId', this.config.userId || ''],
 					].map(i => `${i[0]}=${i[1]}`).join('&')}`
 				);
 				this._websocket.onerror = () => reject('Failed to connect to the server');
@@ -370,6 +372,5 @@ export class Connection extends EventEmitter {
 		producer.observer.on('resume', onResume);
 		this.mediaProducers.set(producer.id, producer);
 	}
-
-
+	
 }

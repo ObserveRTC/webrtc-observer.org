@@ -10,6 +10,7 @@ const logger = createLogger('CreateProducerRequestListener');
 export type CreateProducerRequestListenerContext = {
 	mediasoupService: MediasoupService,
 	clients: Map<string, ClientContext>,
+	maxProducerPerClients: number,
 }
 
 export function createCreateProducerRequestListener(listenerContext: CreateProducerRequestListenerContext) {
@@ -27,14 +28,23 @@ export function createCreateProducerRequestListener(listenerContext: CreateProdu
 			return console.warn(`Invalid message type ${request.type}`);
 		} else if (!client) {
 			return console.warn(`Client ${messageContext.clientId} not found`);
+		} else if (!client.routerId) {
+			return console.warn(`Client ${messageContext.clientId} routerId not found`);
 		} else if (client.sndTransport === undefined) {
 			return console.warn(`Client ${messageContext.clientId} has no sending transport`);
+		} else if (client.mediaProducers.size >= listenerContext.maxProducerPerClients) {
+			return messageContext.send(new Response(
+				request.requestId,
+				undefined,
+				`Max producers per client reached`
+			));
 		}
 
 		let response: CreateProducerResponsePayload | undefined;
 		let error: string | undefined;
 		try {
 			
+
 			const producer = await client.sndTransport.produce({
 				kind: request.kind,
 				rtpParameters: request.rtpParameters,

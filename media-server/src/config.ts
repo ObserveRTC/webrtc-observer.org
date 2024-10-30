@@ -7,6 +7,8 @@ export type Config = {
     configPath?: string;
     server: ServerConfig,
     mediasoup: MediasoupServiceConfig;
+    maxTransportsPerRouter: number;
+    maxProducerPerClients: number;
 };
 
 const getDefaultConfig: () => Config = () => {
@@ -16,6 +18,8 @@ const getDefaultConfig: () => Config = () => {
             serverIp: '127.0.0.1',
             // announcedIp: '127.0.0.1',
         },
+        maxTransportsPerRouter: 6,
+        maxProducerPerClients: 1,
         mediasoup: {
             numberOfWorkers: 1,
             workerSettings: {

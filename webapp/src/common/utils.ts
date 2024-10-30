@@ -44,3 +44,122 @@ export async function timeoutPromise<T>(promise: Promise<T>, timeout: number): P
 		return result;
 	});
 }
+
+const names: string[] = [
+	// Action/Adventure
+	'Indiana Jones',
+	'James Bond',
+	'Ethan Hunt',
+	'John McClane',
+	'Lara Croft',
+	'Jack Sparrow',
+	'Han Solo',
+	'Neo',
+	'Jason Bourne',
+    
+	// Sci-Fi/Fantasy
+	'Luke Skywalker',
+	'Frodo Baggins',
+	'Harry Potter',
+	'Hermione Granger',
+	'Katniss Everdeen',
+	'Darth Vader',
+	'Gandalf',
+	'Optimus Prime',
+	'Yoda',
+    
+	// Animation
+	'Woody',
+	'Buzz Lightyear',
+	'Elsa',
+	'Simba',
+	'Mulan',
+	'Po (Kung Fu Panda)',
+	'Shrek',
+	'Nemo',
+	'Stitch',
+    
+	// Superhero
+	'Spider-Man',
+	'Iron Man',
+	'Batman',
+	'Superman',
+	'Wonder Woman',
+	'Captain America',
+	'Hulk',
+	'Black Panther',
+	'Thor',
+    
+	// Horror
+	'Michael Myers',
+	'Freddy Krueger',
+	'Jason Voorhees',
+	'Samara Morgan',
+	'Regan MacNeil',
+	'Jack Torrance',
+	'Norman Bates',
+	'Carrie White',
+	'Pennywise',
+    
+	// Drama
+	'Forrest Gump',
+	'Andy Dufresne',
+	'Vito Corleone',
+	'Tony Montana',
+	'Rocky Balboa',
+	'Atticus Finch',
+	'Jack Dawson',
+	'Rose DeWitt Bukater',
+	'Scarlett O\'Hara',
+    
+	// Comedy
+	'Ace Ventura',
+	'Ferris Bueller',
+	'Ron Burgundy',
+	'Dr. Emmett Brown',
+	'Marty McFly',
+	'Austin Powers',
+	'Napoleon Dynamite',
+	'Elle Woods',
+	'Alan Garner',
+    
+	// Romance
+	'Noah Calhoun',
+	'Allie Hamilton',
+	'Sally Albright',
+	'Harry Burns',
+	'Edward Lewis',
+	'Vivian Ward',
+	'Westley',
+	'Buttercup',
+	'Mr. Darcy',
+    
+	// Animated Classics
+	'Snow White',
+	'Cinderella',
+	'Aurora',
+	'Ariel',
+	'Belle',
+	'Aladdin',
+	'Jasmine',
+	'Pocahontas',
+	'Simba',
+    
+	// Miscellaneous
+	'Maximus Decimus Meridius',
+	'William Wallace',
+	'John Wick',
+	'Tyler Durden',
+	'Rick Blaine',
+	'Clarice Starling',
+	'Marge Gunderson',
+	'Amélie Poulain',
+	'Alex DeLarge'
+];
+
+
+export function getRandomUserId(): string {
+	const randomIndex = Math.floor(Math.random() * names.length);
+	return names[randomIndex];
+}
+  

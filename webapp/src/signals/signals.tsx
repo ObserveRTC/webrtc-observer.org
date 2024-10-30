@@ -9,6 +9,6 @@ export type Page =
     | 'exit' 
     | 'observer';
 
-export const [ page, setPage ] = createSignal<Page>('lobby');
+export const [ page, setPage ] = createSignal<Page>('main');
 
 export type MediaResults = 'tcp' | 'relay' | 'bw' | 'loss' | 'latency' | 'connection';
