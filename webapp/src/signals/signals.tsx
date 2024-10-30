@@ -5,7 +5,7 @@ export type Page =
     | 'lobby' 
     | 'stunner'
     | 'videoCall' 
-    | 'clientMonitor'
+    | 'client-monitor-properties'
     | 'exit' 
     | 'observer';
 

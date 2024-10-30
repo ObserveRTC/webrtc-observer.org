@@ -4,10 +4,10 @@ import Join from './views/Join';
 import { Transition } from 'solid-transition-group';
 import ObserverView from './views/OngoingCalls';
 import { Grid } from '@suid/material';
-import ClientMonitor from './components/ClientMonitor/ClientMonitor';
 import VideoCall from './views/VideoCall';
 import Main from './views/Main';
 import { clientStore } from './stores/LocalClientStore';
+import ClientMonitorProperties from './views/ClientMonitorProperties';
 
 
 const App: Component = () => {
@@ -18,7 +18,7 @@ const App: Component = () => {
 					<Switch>
 						<Match when={page() === 'main'}><Main/></Match>
 						<Match when={page() === 'lobby'}><Join/></Match>
-						<Match when={page() === 'clientMonitor'}><ClientMonitor /></Match>
+						<Match when={page() === 'client-monitor-properties'}><ClientMonitorProperties /></Match>
 						<Match when={page() === 'videoCall'}><VideoCall /></Match>
 						<Match when={page() === 'observer'}><ObserverView /></Match>
 					</Switch>

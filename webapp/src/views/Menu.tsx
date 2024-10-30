@@ -48,12 +48,6 @@ const Menu: Component = () => {
                 VideoCall
 			</Button>
 
-			<Button 
-				onClick={() => setPage('clientMonitor')}
-				disabled={Boolean(clientStore.call) === false}
-			>
-                ClientMonitor
-			</Button>
 		</Box>
 	);
 };

@@ -49,7 +49,7 @@ const Main: Component = () => {
 					<p class='text-left text-base font-sans text-gray-600 antialiased text-justify'>
                         Short Intro about ClientMonitor
 					</p>
-					<a href="#" class="text-sm text-blue-600 dark:text-blue-500 hover:underline" onClick={() => setPage('main')}>
+					<a href="#" class="text-sm text-blue-600 dark:text-blue-500 hover:underline" onClick={() => setPage('client-monitor-properties')}>
                         See ClientMonitor Properties
 					</a>
 					<a href="#" class="text-sm text-blue-600 dark:text-blue-500 hover:underline" onClick={() => setPage('main')}>

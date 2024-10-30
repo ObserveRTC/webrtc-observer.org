@@ -1,8 +1,9 @@
 import { ClientContext } from "../common/ClientContext";
 import { createLogger } from "../common/logger";
 import { JoinCallResponsePayload, Response } from "../protocols/MessageProtocol";
-import { MediasoupService } from "../services/MediasoupService"
+import { MediasoupService, RouterAppData } from "../services/MediasoupService"
 import { ClientMessageContext } from "./ClientMessageListener";
+import * as mediasoup from 'mediasoup';
 
 const logger = createLogger('JoinCallRequestListener');
 
@@ -43,11 +44,14 @@ export function createJoinCallRequestListener(listenerContext: JoinCallRequestLi
 				let error: string | undefined;
 				
 				try {
-					if (request.callId && mediasoupService.routers.has(request.callId) === false) {
-						throw new Error(`Call with id ${request.callId} does not exist`);
-					}
+					let router: mediasoup.types.Router<RouterAppData> | undefined;
 
-					const router = await mediasoupService.getOrCreateRouter(request.callId);
+					if (request.callId) {
+						router = mediasoupService.calls.get(request.callId);
+						if (!router) throw new Error(`Call with id ${request.callId} does not exist`);
+					} else {
+						router = await mediasoupService.createRouter();
+					}
 
 					if (listenerContext.maxTransportsPerRouter <= router.appData.transports.size) {
 						closeClient = true;

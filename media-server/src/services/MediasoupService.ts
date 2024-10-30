@@ -2,6 +2,9 @@ import * as mediasoup from 'mediasoup';
 import { createLogger } from '../common/logger';
 import { ClientContext } from '../common/ClientContext';
 import { ControlConsumerNotification } from '../protocols/MessageProtocol';
+import dns from 'dns';
+import os from 'os';
+import { createRandomCallId } from '../common/utils';
 
 const logger = createLogger('MediasoupService');
 
@@ -17,6 +20,7 @@ type WorkerAppData = {
 }
 
 export type RouterAppData = {
+	callId: string;
 	workerPid: number;
 	mediaProducers: Map<string, mediasoup.types.Producer<ProducerAppData>>;
 	mediaConsumers: Map<string, mediasoup.types.Consumer<ConsumerAppData>>;
@@ -35,12 +39,10 @@ type ConsumerAppData = {
 	remoteClosed?: boolean;
 }
 
-import dns from 'dns';
-import os from 'os';
-
 export class MediasoupService {
 	private _run = false;
 	public readonly workers = new Map<number, mediasoup.types.Worker<WorkerAppData>>();
+	public readonly calls = new Map<string, mediasoup.types.Router<RouterAppData>>();
 	public readonly routers = new Map<string, mediasoup.types.Router<RouterAppData>>();
 	public readonly transports = new Map<string, mediasoup.types.Transport>();
 	public readonly mediaProducers = new Map<string, mediasoup.types.Producer<ProducerAppData>>();
@@ -121,17 +123,14 @@ export class MediasoupService {
 		}
 	}
 
-	public async getOrCreateRouter(routerId?: string): Promise<mediasoup.types.Router<RouterAppData>> {		
+	public async createRouter(): Promise<mediasoup.types.Router<RouterAppData>> {		
 		if (!this.workers) throw new Error('Worker is not started');
 		
-		let router = this.routers.get(routerId || '');
-		
-		if (router) return router;
-
 		const worker = [...this.workers.values()][Math.floor(Math.random() * this.workers.size)];
 		const newrouter = await worker.createRouter<RouterAppData>({
 			mediaCodecs: this.config.mediaCodecs,
 			appData: {
+				callId: createRandomCallId(),
 				workerPid: worker.pid,
 				dataConsumers: new Map(),
 				dataProducers: new Map(),
@@ -145,11 +144,13 @@ export class MediasoupService {
 
 		newrouter.observer.once('close', () => {
 			newrouter.observer.off('newtransport', addTransport);
+			this.calls.delete(newrouter.appData.callId);
 			this.routers.delete(newrouter.id);
 
 			logger.info(`Router ${newrouter.id} closed`);
 		})
 		newrouter.observer.on('newtransport', addTransport);
+		this.calls.set(newrouter.appData.callId, newrouter);
 		this.routers.set(newrouter.id, newrouter);
 
 		logger.info(`Router ${newrouter.id} created`);
