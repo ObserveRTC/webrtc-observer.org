@@ -18,6 +18,8 @@ netdebug:
   # set true to deploy an extra debug container along the components
   enabled: false
 
+redis:
+  image: docker.io/redis:latest
 
 serviceAccount:
   create: true
