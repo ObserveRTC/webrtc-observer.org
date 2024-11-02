@@ -32,7 +32,7 @@ const Main: Component = () => {
 				</Section>
 				<Section title="STUNner" subsection={true}>
 					<p class='text-left text-base font-sans text-gray-600 antialiased text-justify'>
-                        Short intro about STUNner
+                        STUNner is an open-source project designed to facilitate the deployment of WebRTC services within Kubernetes environments. It acts as a media gateway that provides standards-compliant STUN/TURN functionalities to ingest real-time media into a Kubernetes cluster, enabling a seamless integration of WebRTC services into the cloud-native ecosystem.
 					</p>
 					<a href="#" class="text-sm text-blue-600 dark:text-blue-500 hover:underline" onClick={() => setPage('main')}>
                         Monitor STUNner
