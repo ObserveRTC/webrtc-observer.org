@@ -90,6 +90,7 @@ data:
     maxTransportsPerRouter: 6
     maxProducerPerClients: 2
     maxClientLifeTimeInMins: 15
+    stunnerAuthUrl: "http://stunner-auth.stunner-system:8088?service=turn"
     hamok:
       clientsMap:
         mapId: "webrtc-observer-clients-map"

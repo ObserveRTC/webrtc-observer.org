@@ -6,7 +6,7 @@ import {
 	TableContainer,
 	TableRow,
 } from '@suid/material';
-import { Component, For, JSXElement, Setter, Show } from 'solid-js';
+import { Component, createSignal, For, JSXElement, Setter, Show } from 'solid-js';
 import { clientStore } from '../../stores/LocalClientStore';
 import JSONFormatter from 'json-formatter-js';
 import Button from '../Button';
@@ -48,9 +48,6 @@ const EntryBaseCmp: Component<EntryBaseCmpProps> = (props: EntryBaseCmpProps) =>
 					<TableRow
 						sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
 					>
-						<TableCell component="th" scope="row">
-							Properties:
-						</TableCell>
 						<TableCell align="left">
 							{new JSONFormatter(props.properties, 3).render()}
 						</TableCell>
@@ -60,9 +57,6 @@ const EntryBaseCmp: Component<EntryBaseCmpProps> = (props: EntryBaseCmpProps) =>
 							<TableRow
 								sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
 							>
-								<TableCell component="th" scope="row">
-									{`${navigation.name}`}
-								</TableCell>
 								<TableCell align="left">
 									<Show when={navigation.action} fallback={'undefined'}>
 										<button
@@ -82,28 +76,32 @@ const EntryBaseCmp: Component<EntryBaseCmpProps> = (props: EntryBaseCmpProps) =>
 					<For each={props.iterableNavigations.filter(item => 0 < item.items.length)}>
 						{(iterableNavigation) => (
 							// <Show when={iterableNavigation.items.length > 0}>
-							<TableRow
-								sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-							>
-								<TableCell component="th" scope="row">
-									{`${iterableNavigation.name}`}
-								</TableCell>
-								<TableCell align="left">
-									<For each={iterableNavigation.items}>
-										{(item) => (
-											<button
-												onClick={() => props.next({
-													name: item.key,
-													action: item.action
-												})}
-												class='flex justify-center rounded-md bg-indigo-600 p-1.5 mt-4 font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:bg-slate-200'
-											>
-												{item.key}
-											</button>
-										)}
-									</For>
-								</TableCell>
-							</TableRow>
+							<For each={iterableNavigation.items}>
+								{(item) => {
+									const [element, setElement] = createSignal<JSXElement | undefined>();
+									return (
+										<TableRow
+											sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+										>
+											<TableCell align="left">
+												<a onClick={() => setElement(item.action())} >{item.key}</a>
+												<Show when={element()}>
+													{element()}
+												</Show>
+											</TableCell>
+										</TableRow>
+										// <button
+										// 	onClick={() => props.next({
+										// 		name: item.key,
+										// 		action: item.action
+										// 	})}
+										// 	class='flex justify-center rounded-md bg-indigo-600 p-1.5 mt-4 font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:bg-slate-200'
+										// >
+										// 	{item.key}
+										// </button>
+									);}
+								}
+							</For>
 							// </Show>
 						)}
 					</For>

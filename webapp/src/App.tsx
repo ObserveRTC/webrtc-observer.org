@@ -9,17 +9,13 @@ import Main from './views/Main';
 import { clientStore } from './stores/LocalClientStore';
 import ClientMonitorProperties from './views/ClientMonitorProperties';
 import SimpleCountdown from './components/Countdown/SimpleCountdown';
+import Box from './components/Box';
 
 
 const App: Component = () => {
 	return (
 		<Grid container spacing={2}>
-			<Grid item xs={2}>
-				<Show when={clientStore.clientMaxLifetimeInMs}>
-					<p>Time left before the client is closed:</p>
-					<SimpleCountdown millis={(clientStore.clientMaxLifetimeInMs ?? 0) - (Date.now() - (clientStore.clientCreatedServerTimestamp ?? 0))} onZero={() => clientStore.call?.close()}/>
-				</Show>
-			</Grid>
+			<Grid item xs={2} />
 			<Grid item xs={7}>
 				<Transition name='fade' mode='outin'>
 					<Switch>
@@ -34,6 +30,11 @@ const App: Component = () => {
 			<Grid item xs={3}>
 				<Show when={clientStore.call} fallback={<Join />}>
 					<VideoCall />
+				</Show>
+				<Show when={clientStore.clientMaxLifetimeInMs}>
+					<Box title={'Client Lifetime'} full={true}>
+						<SimpleCountdown millis={(clientStore.clientMaxLifetimeInMs ?? 0) - (Date.now() - (clientStore.clientCreatedServerTimestamp ?? 0))} onZero={() => clientStore.call?.close()}/>
+					</Box>
 				</Show>
 			</Grid>
 			{/* <Grid item xs={12}>
