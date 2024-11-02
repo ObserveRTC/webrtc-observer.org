@@ -23,6 +23,9 @@ export type LocalClientStore = {
 	selectedAudioDeviceId?: string;
 	selectedVideoDeviceId?: string;
 	mediaStream?: MediaStream;
+	clientCreatedServerTimestamp?: number;
+	clientMaxLifetimeInMs?: number;
+	innerServerIp?: string;
 }
 
 export const [clientStore, setClientStore] = createStore<LocalClientStore>({

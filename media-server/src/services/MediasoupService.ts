@@ -4,9 +4,15 @@ import { ClientContext } from '../common/ClientContext';
 import { ControlConsumerNotification } from '../protocols/MessageProtocol';
 import dns from 'dns';
 import os from 'os';
-import { createRandomCallId } from '../common/utils';
+import { cmpUuids } from '../common/utils';
+import { WebRtcTransport } from 'mediasoup/node/lib/types';
+import { EventEmitter } from 'stream';
 
 const logger = createLogger('MediasoupService');
+
+export type MediasoupServiceEventMap = {
+	'new-webrtc-media-consumer': [ consumer: mediasoup.types.Consumer ],
+}
 
 export type MediasoupServiceConfig = {
 	numberOfWorkers: number;
@@ -33,35 +39,63 @@ type ProducerAppData = {
 	routerId: string;
 	transportId: string;
 	remoteClosed?: boolean;
+	piped?: boolean;
 }	
 
 type ConsumerAppData = {
 	remoteClosed?: boolean;
 }
 
-export class MediasoupService {
+export type PipeTransportAppData = {
+	remoteRouterId: string;
+	connecting?: Promise<void>;
+	connected: boolean;
+}
+
+type PipedMediaProducerAppData = {
+	srcRouterId: string;
+	routerId: string;
+}
+
+type PipedMediaConsumerAppData = {
+	srcRouterId: string;
+	dstRouterId: string;
+}
+
+export class MediasoupService extends EventEmitter<MediasoupServiceEventMap> {
 	private _run = false;
 	public readonly workers = new Map<number, mediasoup.types.Worker<WorkerAppData>>();
-	public readonly calls = new Map<string, mediasoup.types.Router<RouterAppData>>();
 	public readonly routers = new Map<string, mediasoup.types.Router<RouterAppData>>();
 	public readonly transports = new Map<string, mediasoup.types.Transport>();
 	public readonly mediaProducers = new Map<string, mediasoup.types.Producer<ProducerAppData>>();
 	public readonly mediaConsumers = new Map<string, mediasoup.types.Consumer<ConsumerAppData>>();
 	public readonly dataProducers = new Map<string, mediasoup.types.DataProducer>();
 	public readonly dataConsumers = new Map<string, mediasoup.types.DataConsumer>();
+
+	private readonly _pipedMediaProducer = new Map<string, Promise<mediasoup.types.Producer<PipedMediaProducerAppData>>>();
+	private readonly _pipedMediaConsumer = new Map<string, mediasoup.types.Consumer<PipedMediaConsumerAppData>>();
+	private readonly _pipes = new Map<string, Promise<mediasoup.types.PipeTransport<PipeTransportAppData>>>();
+
 	private _announcedAddress?: string;
 
 	public constructor(
 		public readonly config: MediasoupServiceConfig
 	) {
-
+		super();
 	}
+
+	public createRemotePipeTransport?: (options: { srcRouterId: string, dstRouterId: string }) => Promise<{ ip: string, port: number }>;
+	public connectRemotePipeTransport?: (options: { srcRouterId: string, dstRouterId: string, ip: string, port: number }) => Promise<void>;
+	public pipeRemoteMediaProducerTo?: (options: { mediaProducerId: string, srcRouterId: string, dstRouterId: string }) => Promise<mediasoup.types.ProducerOptions>;
 	
 	public async start() {
 		if (this._run) return;
 		this._run = true;
 		const webrtcServerListeningPorts = new Set<number>();
-		const address = await dns.promises.lookup(os.hostname());
+
+		logger.info('os.hostname(): %o', os.hostname());
+
+		const address = await dns.promises.lookup(os.hostname()).catch(err => (logger.error('Error occurred while trying to get hostname', err), { address: undefined }));
 		
 		this._announcedAddress = address.address;
 
@@ -123,14 +157,22 @@ export class MediasoupService {
 		}
 	}
 
-	public async createRouter(): Promise<mediasoup.types.Router<RouterAppData>> {		
+	public get announcedAddress() {
+		return this._announcedAddress ?? '127.0.0.1';
+	}
+
+	public closePipedMediaProducer(mediaProducerId: string) {
+		this._pipedMediaProducer.get(mediaProducerId)?.then(producer => producer.close());
+	}
+
+	public async createRouter(callId: string): Promise<mediasoup.types.Router<RouterAppData>> {		
 		if (!this.workers) throw new Error('Worker is not started');
 		
 		const worker = [...this.workers.values()][Math.floor(Math.random() * this.workers.size)];
 		const newrouter = await worker.createRouter<RouterAppData>({
 			mediaCodecs: this.config.mediaCodecs,
 			appData: {
-				callId: createRandomCallId(),
+				callId,
 				workerPid: worker.pid,
 				dataConsumers: new Map(),
 				dataProducers: new Map(),
@@ -144,21 +186,150 @@ export class MediasoupService {
 
 		newrouter.observer.once('close', () => {
 			newrouter.observer.off('newtransport', addTransport);
-			this.calls.delete(newrouter.appData.callId);
 			this.routers.delete(newrouter.id);
 
 			logger.info(`Router ${newrouter.id} closed`);
 		})
 		newrouter.observer.on('newtransport', addTransport);
-		this.calls.set(newrouter.appData.callId, newrouter);
 		this.routers.set(newrouter.id, newrouter);
 
 		logger.info(`Router ${newrouter.id} created`);
 		return newrouter;
 	}
 
+	public async getOrCreatePipedMediaProducer(options: { mediaProducerId: string, localRouterId: string, remoteRouterId: string }): Promise<mediasoup.types.Producer> {
+		const existingMediaProducer = this._pipedMediaProducer.get(options.mediaProducerId);
+		const localRouter = this.routers.get(options.localRouterId);
+
+		if (existingMediaProducer) return existingMediaProducer;
+		else if (!localRouter) throw new Error(`Router ${options.localRouterId} not found`);
+		
+		const pipedMediaProducer = (async () => {
+			if (!this.pipeRemoteMediaProducerTo) throw new Error('consumeRemoteProducer is not set');
+			
+			const localPipeTransport = await this._pipeToRemoteRouter({ localRouterId: options.localRouterId, remoteRouterId: options.remoteRouterId });
+			const producerOptions = await this.pipeRemoteMediaProducerTo({
+				dstRouterId: options.localRouterId,
+				srcRouterId: options.remoteRouterId,
+				mediaProducerId: options.mediaProducerId,
+			});
+			const mediaProducer = await localPipeTransport.produce<PipedMediaProducerAppData>({
+				...producerOptions,
+				appData: {
+					srcRouterId: options.remoteRouterId,
+					routerId: options.localRouterId,
+				}
+			});
+
+			logger.debug(`Piped media producer ${mediaProducer.id} is created from router ${options.remoteRouterId} to router ${options.localRouterId}. kind: ${mediaProducer.kind}, paused: ${mediaProducer.paused}`);
+
+			mediaProducer.observer.once('close', () => {
+				this._pipedMediaProducer.delete(options.mediaProducerId);
+
+				logger.debug(`Piped media producer ${mediaProducer.id} closed`);
+			});
+
+			return mediaProducer;
+		})();
+
+		this._pipedMediaProducer.set(options.mediaProducerId, pipedMediaProducer);
+
+		logger.debug(`Piped media producer ${options.mediaProducerId} is creating from router ${options.remoteRouterId} to router ${options.localRouterId}`);
+		
+		return pipedMediaProducer;
+	}
+
+	public async getOrCreatePipedMediaConsumer(options: { srcRouterId: string, dstRouterId: string, mediaProducerId: string }): Promise<mediasoup.types.Consumer<PipedMediaConsumerAppData>> {
+		let existingMediaConsumer = this._findExistingPipedMediaConsumer(options.srcRouterId, options.dstRouterId, options.mediaProducerId);
+		const srcRouter = this.routers.get(options.srcRouterId);
+
+		if (existingMediaConsumer) return existingMediaConsumer;
+		else if (!srcRouter) throw new Error(`Router ${options.srcRouterId} not found`);
+
+		const pipeTransport = await this.getOrCreatePipeTransport(options.srcRouterId, options.dstRouterId);
+
+		if (!pipeTransport) throw new Error(`Pipe transport from ${options.srcRouterId} to ${options.dstRouterId} not found`);
+
+		await pipeTransport.appData.connecting;
+
+		const mediaProducer = this.mediaProducers.get(options.mediaProducerId);
+		if (!mediaProducer) throw new Error(`Media producer ${options.mediaProducerId} not found`);
+
+		const consumer = await pipeTransport.consume<PipedMediaConsumerAppData>({
+			producerId: mediaProducer.id,
+			appData: {
+				dstRouterId: options.dstRouterId,
+				srcRouterId: options.srcRouterId,
+			}
+		});
+
+		existingMediaConsumer = this._findExistingPipedMediaConsumer(options.srcRouterId, options.dstRouterId, options.mediaProducerId);
+
+		if (existingMediaConsumer) {
+			logger.warn(`Piped media consumer ${existingMediaConsumer.id} already created for media producer ${options.mediaProducerId} meanwhile creating new one`);
+			consumer.close();
+
+			return existingMediaConsumer;
+		}
+
+		consumer.observer.once('close', () => {
+			this._pipedMediaConsumer.delete(options.mediaProducerId);
+
+			logger.debug(`Piped media consumer ${consumer.id} closed for media producer ${options.mediaProducerId}`);
+		});
+		this._pipedMediaConsumer.set(options.mediaProducerId, consumer);
+
+		logger.debug(`Piped media consumer ${consumer.id} created for media producer ${options.mediaProducerId} from router ${options.srcRouterId} to router ${options.dstRouterId}. kind: ${consumer.kind}, paused: ${consumer.paused}`);
+
+		return consumer;
+	}
+
+	public getOrCreatePipeTransport(srcRouterId: string, dstRouterId: string): Promise<mediasoup.types.PipeTransport<PipeTransportAppData>> {
+		const srcRouter = this.routers.get(srcRouterId);
+		const existingPipe = this._pipes.get(dstRouterId);
+
+		if (!srcRouter) {
+			throw new Error(`Router ${srcRouterId} or ${dstRouterId} not found`);
+		} else if (existingPipe) {
+			return existingPipe;
+		}
+
+		const pipeTransport = (async () => {
+			try {
+				const result = await srcRouter.createPipeTransport<PipeTransportAppData>({
+					listenInfo: {
+						ip: this._announcedAddress ?? '127.0.0.1',
+						protocol: 'udp',
+					},
+					appData: {
+						remoteRouterId: dstRouterId,
+						connecting: undefined,
+						connected: false,
+					}
+				});
+
+				result.observer.once('close', () => {
+					this._pipes.delete(dstRouterId);
+				});
+
+				logger.debug(`Pipe transport created. srcRouterId: ${srcRouterId}, dstRouter: ${dstRouterId}, listenInfo: %o`, result.tuple);
+
+				return result;
+			} catch (err) {
+				logger.error(`Error occurred while creating pipe transport`, err);
+				this._pipes.delete(dstRouterId);
+				throw err;
+			}
+			
+		})();
+
+		this._pipes.set(dstRouterId, pipeTransport);
+
+		return pipeTransport;
+	}
+
 	public async consumeMediaProducer(producerId: string, consumingClient: ClientContext): Promise<mediasoup.types.Consumer> {
-		const mediaProducer = this.mediaProducers.get(producerId);
+		const mediaProducer = this.mediaProducers.get(producerId) ?? (await this._pipedMediaProducer.get(producerId));
 		logger.info(`Attempt to consume media producer ${mediaProducer?.id} to client ${consumingClient.clientId}`);
 
 		if (!mediaProducer || !consumingClient) {
@@ -193,7 +364,6 @@ export class MediasoupService {
 		consumer.observer.once('close', () => {
 			mediaProducer.observer.off('pause', onProducerPause);
 			mediaProducer.observer.off('resume', onProducerResume);
-			consumingClient.mediaConsumers.delete(consumer.id);
 
 			if (!consumer.appData.remoteClosed) {
 				consumingClient.send(new ControlConsumerNotification(
@@ -204,13 +374,62 @@ export class MediasoupService {
 		});
 		mediaProducer.observer.on('pause', onProducerPause);
 		mediaProducer.observer.on('resume', onProducerResume);
-		consumingClient.mediaConsumers.add(consumer.id);
 
 		return consumer;
 	};
 
-	private _addTransport = (router: mediasoup.types.Router<RouterAppData>, transport: mediasoup.types.Transport) => {
+	private async _pipeToRemoteRouter(options: { remoteRouterId: string, localRouterId: string }): Promise<mediasoup.types.PipeTransport<PipeTransportAppData>> {
 		
+		if (!this.createRemotePipeTransport) throw new Error('createRemotePipeTransport is not set');
+		else if (!this.connectRemotePipeTransport) throw new Error('connectRemotePipeTransport is not set');
+
+		const localPipeTransport = await this.getOrCreatePipeTransport(options.localRouterId, options.remoteRouterId);
+
+		if (localPipeTransport.appData.connecting) {
+			await localPipeTransport.appData.connecting;
+
+			return localPipeTransport;
+		}
+
+		logger.debug(`Connecting pipe transports from ${options.localRouterId} to ${options.remoteRouterId}`);
+
+		const { ip: remoteIp, port: remotePort } = await this.createRemotePipeTransport({
+			srcRouterId: options.remoteRouterId,
+			dstRouterId: options.localRouterId,
+		});
+
+		logger.debug(`Remote Pipe transport from ${options.remoteRouterId} is created. Address: ${remoteIp}:${remotePort}. is local pipe transport connecting? ${localPipeTransport.appData.connecting !== undefined}`);
+
+		if (localPipeTransport.appData.connecting) {
+			await localPipeTransport.appData.connecting;
+
+			return localPipeTransport;
+		}
+
+		localPipeTransport.appData.connecting = Promise.all([
+			localPipeTransport.connect({ ip: remoteIp, port: remotePort }),
+			this.connectRemotePipeTransport({
+				srcRouterId: options.remoteRouterId,
+				dstRouterId: options.localRouterId,
+				ip: localPipeTransport.tuple.localIp,
+				port: localPipeTransport.tuple.localPort,
+			})
+		]).then(() => void 0)
+
+		await localPipeTransport.appData.connecting;
+		localPipeTransport.appData.connected = true;
+
+		logger.debug(`Pipe transports are connected between ${options.localRouterId} to ${options.remoteRouterId}`);
+
+		return localPipeTransport;
+	}
+
+	private _addTransport = (router: mediasoup.types.Router<RouterAppData>, transport: mediasoup.types.Transport) => {
+		if (transport instanceof WebRtcTransport === false) {
+			// at the moment we only add webrtc transport
+			return;
+		}
+
 		const addProducer = (producer: mediasoup.types.Producer) => this._addProducer(router, transport, producer);
 		const addConsumer = (consumer: mediasoup.types.Consumer) => this._addConsumer(router, transport, consumer);
 		const addDataProducer = (dataProducer: mediasoup.types.DataProducer) => this._addDataProducer(router, transport, dataProducer);
@@ -241,7 +460,6 @@ export class MediasoupService {
 		this.transports.set(transport.id, transport);
 
 		logger.info(`Transport ${transport.id} created on router ${router.id}`);
-
 	}
 
 	private _addProducer = (router: mediasoup.types.Router<RouterAppData>, transport: mediasoup.types.Transport, producer: mediasoup.types.Producer) => {
@@ -272,6 +490,9 @@ export class MediasoupService {
 		router.appData.mediaConsumers.set(consumer.id, consumer);
 		this.mediaConsumers.set(consumer.id, consumer);
 
+		if (transport instanceof WebRtcTransport) {
+			this.emit('new-webrtc-media-consumer', consumer);
+		}
 		logger.info(`Consumer ${consumer.id} created on transport ${transport.id} on router ${router.id}`);
 	}
 
@@ -300,6 +521,8 @@ export class MediasoupService {
 
 		logger.info(`Data consumer ${dataConsumer.id} created on transport ${transport.id} on router ${router.id}`);
 	}
-
 	
+	private _findExistingPipedMediaConsumer(srcRouterId: string, dstRouterId: string, mediaProducerId: string): mediasoup.types.Consumer<PipedMediaConsumerAppData> | undefined {
+		return [ ...this._pipedMediaConsumer.values() ].find(consumer => consumer.appData.srcRouterId === srcRouterId && consumer.appData.dstRouterId === dstRouterId && consumer.producerId === mediaProducerId);
+	}
 }

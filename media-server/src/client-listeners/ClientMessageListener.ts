@@ -1,8 +1,8 @@
+import { ClientContext } from "../common/ClientContext"
 import { ClientMessage } from "../protocols/MessageProtocol"
 
 export type ClientMessageContext = {
-	readonly callId?: string,
-	clientId: string,
+	client: ClientContext,
 	message: ClientMessage,
 	send: (message: ClientMessage) => void,
 }

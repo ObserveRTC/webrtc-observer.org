@@ -1,9 +1,9 @@
 import * as http from 'http';
-import { WebSocketServer } from 'ws';
+import { WebSocketServer, WebSocket } from 'ws';
 import { createLogger } from "./common/logger";
 import url from 'url';
 import { ClientContext } from './common/ClientContext';
-import { ClientMessageContext } from './client-listeners/ClientMessageListener';
+import { ClientMessageContext, ClientMessageListener } from './client-listeners/ClientMessageListener';
 import { ClientMessage } from './protocols/MessageProtocol';
 import { EventEmitter } from 'events';
 
@@ -49,7 +49,11 @@ export class Server extends EventEmitter {
     private _state: ServerState = 'idle';
     private _httpServer?: http.Server;
     private _wsServer?: WebSocketServer;
-    
+
+    public readonly clients = new Map<string, ClientContext>();
+    public readonly messageListeners = new Map<string, ClientMessageListener>();
+    public createClientContext?: (base: Pick<ClientContext, 'clientId' | 'send' | 'webSocket' | 'userId'> & { callId?: string }) => Promise<ClientContext>;
+
     public constructor(
         public readonly config: ServerConfig,
     ) {
@@ -139,38 +143,53 @@ export class Server extends EventEmitter {
         });
 
         wsServer.on('connection', async (ws, req) => {
+            if (!this.createClientContext) {
+                logger.error(`createClientContext is not set`);
+                return ws.close(4001, 'Server error');
+            }
+
             // console.warn("\n\n", url.parse(req.url, true).query, "\n\n");
             const query = url.parse(req.url ?? '', true).query;
             const clientId = query.clientId as string;
-            const schemaVersion = query.schemaVersion as string;
+            // const schemaVersion = query.schemaVersion as string;
             const send = (message: ClientMessage) => {
                 const data = JSON.stringify(message);
                 ws.send(data);
             }
-            const clientContext: ClientContext = {
-                userId: query.userId as string,
-                clientId,
-                schemaVersion,
-                webSocket: ws,
-                send,
-                mediaProducers: new Set(),
-                mediaConsumers: new Set(),
-            }
+            const clientContext = await this.createClientContext({ 
+                callId: typeof query.callId === 'string' ? query.callId : undefined,
+                webSocket: ws, 
+                clientId, 
+                send, 
+                userId: typeof query.userId === 'string' ? query.userId : 'unknown-user',
+            });
 
             this.emit('newclient', clientContext);
 
-            ws.on('message', data => {
+            ws.on('message', async data => {
                 const message = JSON.parse(data.toString());
                 const messageContext: ClientMessageContext = {
-                    clientId,
+                    client: clientContext,
                     message,
                     send,
-                    get callId() {
-                        return clientContext.routerId;
-                    },
                 }
-                this.emit('newmessage', messageContext);
+                const listener = this.messageListeners.get(message.type);
+
+                if (!listener) return logger.warn(`No listener found for message type ${message.type}`);
+
+                try {
+                    await listener(messageContext);
+                } catch (err) {
+                    logger.error(`Error occurred while processing message: %o`, err);
+                }
+                // this.emit('newmessage', messageContext);
             });
+
+            clientContext.webSocket.once('close', () => {
+                this.clients.delete(clientId);
+            });
+            this.clients.set(clientId, clientContext);
+            
             logger.info(`Websocket connection is requested from ${req.socket.remoteAddress}, query:`, query);
         });
         wsServer.on('error', error => {

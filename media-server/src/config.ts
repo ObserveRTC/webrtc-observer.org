@@ -2,13 +2,17 @@ import fs from 'fs';
 import YAML from 'yaml';
 import type { MediasoupServiceConfig } from './services/MediasoupService';
 import type { ServerConfig } from './Server';
+import type { HamokServiceConfig } from './services/HamokService';
 
 export type Config = {
     configPath?: string;
     server: ServerConfig,
+    stunnerAuthUrl?: string;
     mediasoup: MediasoupServiceConfig;
     maxTransportsPerRouter: number;
     maxProducerPerClients: number;
+    maxClientLifeTimeInMins: number;
+    hamok: HamokServiceConfig;
 };
 
 const getDefaultConfig: () => Config = () => {
@@ -18,8 +22,28 @@ const getDefaultConfig: () => Config = () => {
             serverIp: '127.0.0.1',
             // announcedIp: '127.0.0.1',
         },
+        
+        hamok: {
+            clientsMap: {
+                mapId: 'webrtc-observer-clients-map',
+            },
+            eventEmitter: {
+                emitterId: 'webrtc-observer-media-service-events',
+            },
+            roomsMap: {
+                mapId: 'webrtc-observer-rooms-map',
+            },
+            redis: {
+                host: 'localhost',
+                port: 6379,
+            },
+            redisChannelId: 'webrtc-observer-hamok-message-channel',
+            devMode: true,
+        },
+        // stunnerAuthUrl: 'http://stunner-auth.stunner-system:8088?service=turn',
         maxTransportsPerRouter: 6,
-        maxProducerPerClients: 1,
+        maxProducerPerClients: 2,
+        maxClientLifeTimeInMins: 15,
         mediasoup: {
             numberOfWorkers: 1,
             workerSettings: {

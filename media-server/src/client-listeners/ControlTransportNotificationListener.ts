@@ -6,24 +6,19 @@ import { ClientMessageContext } from "./ClientMessageListener";
 const logger = createLogger('CreateProducerNotificationListener');
 
 export type CreateControlTransportNotificationListenerContext = {
-	mediasoupService: MediasoupService,
-	clients: Map<string, ClientContext>,
 }
 
 export function createControlTransportNotificationListener(listenerContext: CreateControlTransportNotificationListenerContext) {
 	const { 
-		mediasoupService,
-		clients,
 	} = listenerContext;
 	const result = async (messageContext: ClientMessageContext) => {
 		const { 
 			message: notification,
+			client,
 		} = messageContext;
-		const client = clients.get(messageContext.clientId);
+		
 		if (notification.type !== 'control-transport-notification') {
 			return console.warn(`Invalid message type ${notification.type}`);
-		} else if (!client) {
-			return console.warn(`Client ${messageContext.clientId} not found`);
 		}
 
 		try {

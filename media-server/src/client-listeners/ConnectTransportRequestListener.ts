@@ -7,29 +7,21 @@ import { ClientMessageContext } from "./ClientMessageListener";
 const logger = createLogger('ConnectTransportRequestListener');
 
 export type ConnectTransportRequestListenerContext = {
-		mediasoupService: MediasoupService;
-		clients: Map<string, ClientContext>;
 }
 
 export function createConnectTransportRequestListener(listenerContext: ConnectTransportRequestListenerContext) {
 		const { 
-			mediasoupService,
-			clients,
 		} = listenerContext;
 		
 		const result = async (messageContext: ClientMessageContext) => {
 				const { 
+					client,
 					message: request,
 				} = messageContext;
-				const client = clients.get(messageContext.clientId);
 				
 				if (request.type !== 'connect-transport-request') {
 					return console.warn(`Invalid message type ${request.type}`);
-				} else if (!client) {
-					return console.warn(`Client ${messageContext.clientId} not found`);
 				}
-
-				logger.debug(`Transport ${request.transportId} attempt to connect`);
 
 				let response: ConnectTransportResponsePayload | undefined;
 				let error: string | undefined;

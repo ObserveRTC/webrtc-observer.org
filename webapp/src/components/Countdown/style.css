@@ -1,0 +1,120 @@
+body {
+    margin: 0;
+    padding: 0;
+    color: #444;
+    background: #ecf0f1;
+    font: 300 18px/18px Roboto, sans-serif;
+  }
+  *,
+  :after,
+  :before {
+    box-sizing: border-box;
+  }
+  .pull-left {
+    float: left;
+  }
+  .pull-right {
+    float: right;
+  }
+  .clearfix:after,
+  .clearfix:before {
+    content: '';
+    display: table;
+  }
+  .clearfix:after {
+    clear: both;
+    display: block;
+  }
+  
+  .clock:before,
+  .count:after {
+    content: '';
+    position: absolute;
+  }
+  .clock-wrap {
+    width: 180px; /* Smaller clock wrap */
+    height: 180px;
+    position: relative;
+    border-radius: 40px;
+    background-color: #fff;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.15);
+  }
+  .clock {
+    top: 50%;
+    left: 50%;
+    width: 140px; /* Smaller clock */
+    height: 140px;
+    border-radius: 50%;
+    position: absolute;
+    transform: translate(-50%, -50%);
+    background-color: #587291;
+  }
+  .clock:before {
+    top: 50%;
+    left: 50%;
+    width: 100px; /* Adjusted for smaller size */
+    height: 100px;
+    transform: translate(-50%, -50%);
+    border-radius: inherit;
+    background-color: #2f97c1;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.15), 0 0 3px rgba(255, 255, 255, 0.75) inset;
+  }
+  .count {
+    width: 100%;
+    color: #fff;
+    height: 100%;
+    padding: 30px; /* Smaller padding */
+    font-size: 28px;
+    font-weight: 500;
+    line-height: 40px;
+    position: absolute;
+    text-align: center;
+  }
+  .count:after {
+    width: 100%;
+    display: block;
+    font-size: 14px;
+    font-weight: 300;
+    line-height: 14px;
+    text-align: center;
+    position: relative;
+  }
+  .count.sec:after {
+    content: 'sec';
+  }
+  .count.min:after {
+    content: 'min';
+  }
+  .action {
+    max-width: 160px;
+  }
+  .action .input {
+    position: relative;
+  }
+  .action .input-num {
+    width: 100%;
+    border: none;
+    padding: 10px;
+    border-radius: 40px;
+    background-color: #ecf0f1;
+    color: #2f97c1;
+  }
+  .action .input-btn {
+    top: 0;
+    right: 0;
+    color: #fff;
+    border: none;
+    padding: 10px;
+    position: absolute;
+    border-radius: 40px;
+    background-color: #2f97c1;
+    text-transform: uppercase;
+  }
+  .tbl {
+    display: table;
+    width: 100%;
+  }
+  .tbl .col {
+    display: table-cell;
+  }
+  

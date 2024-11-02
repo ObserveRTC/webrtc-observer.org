@@ -12,7 +12,6 @@ const logger = createLogger('ClientMonitorSampleNotificatinListener');
 
 export type ClientMonitorSampleNotificatinListenerContext = {
 	observer: Observer,
-	clients: Map<string, ClientContext>;
 }
 
 export function createObserverRequestListener(listenerContext: ClientMonitorSampleNotificatinListenerContext) {

@@ -7,6 +7,7 @@ import { v4 as uuid } from 'uuid';
 import { RtpCapabilities } from 'mediasoup-client/lib/RtpParameters';
 import { 
 	ClientMessage, 
+	JoinCallResponsePayload, 
 	NotificationMap, 
 	ObservedGetOngoingCallResponse, 
 	ObserverGetCallStatsResponse, 
@@ -88,7 +89,7 @@ export class Connection extends EventEmitter {
 	// here for checking compatibility with client lib, no other use
 	// private _deviceMonitor?: MediasoupStatsCollectorDeviceInterface
 
-	public async join() {
+	public async join(): Promise<Pick<JoinCallResponsePayload, 'innerServerIp' | 'clientCreatedServerTimestamp' | 'clientMaxLifetimeInMs'>> {
 		if (!this._device) {
 			this._device = new Device();
 			// const deviceMonitor = this.monitor.collectors.addMediasoupDevice(this._device);
@@ -122,13 +123,16 @@ export class Connection extends EventEmitter {
 		this.sndTransport?.close();
 		this.rcvTransport?.close();
 
+		const response = await this._request('join-call-request', {
+			callId: this.config.callId,
+		});
+
+		console.warn('response', response);
 		const { 
 			iceServers,
 			callId, 
 			rtpCapabilities: routerRtpCapabilities 
-		} = await this._request('join-call-request', {
-			callId: this.config.callId,
-		});
+		} = response;
 
 		console.warn('iceServers', iceServers);
 		
@@ -147,6 +151,8 @@ export class Connection extends EventEmitter {
 		this.rcvTransport = await this._createTransportProcess('createRecvTransport', routerRtpCapabilities, iceServers);
 
 		this.emit('join');
+
+		return response;
 	}
 
 	public get callId() {
@@ -193,6 +199,7 @@ export class Connection extends EventEmitter {
 		try {
 			switch (message.type) {
 			case 'consumer-created-notification': {
+				// logger.debug('Consumer created notification received', message);
 				await this._createMediaConsumer({
 					rtpParameters: message.rtpParameters,
 					producerId: message.remoteProducerId,
@@ -327,7 +334,7 @@ export class Connection extends EventEmitter {
 			action: 'pause',
 		});
 		const onResume = () =>{
-			console.warn('resume');
+			// console.warn('resume');
 			this._notify('control-consumer-notification', { 
 				consumerId: consumer.id,
 				action: 'resume',

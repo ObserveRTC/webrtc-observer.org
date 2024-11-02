@@ -15,7 +15,10 @@ const Join: Component = () => {
 	
 	onMount(() => {
 		updateClientMedia({});
-		setCallConfig({ ...callConfig,  });
+		setCallConfig({ 
+			...callConfig,  
+			userId: clientStore.userId,
+		});
 	});
 	return (
 		<Box title="Join to a Call" popoverText='Popover'>
@@ -66,8 +69,20 @@ const Join: Component = () => {
 				onClick={() => {
 					setInProgress(true);
 					joinToCall(JSON.parse(JSON.stringify(callConfig)))
-						.then(() => {
-							setClientStore({ ...clientStore, call: window.call });
+						.then(({ clientCreatedServerTimestamp, innerServerIp, clientMaxLifetimeInMs }) => {
+							window.call?.once('close', () => {
+								setClientStore({ 
+									...clientStore, 
+									call: undefined 
+								});
+							});
+							setClientStore({ 
+								...clientStore, 
+								call: window.call,
+								clientCreatedServerTimestamp,
+								innerServerIp,
+								clientMaxLifetimeInMs,
+							});
 							// setPage('videoCall');
 						})
 						.catch(err => setError(err ? `${err}` : 'Unknown error'))

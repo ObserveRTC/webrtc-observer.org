@@ -1,6 +1,7 @@
 import { ClientContext } from "../common/ClientContext";
 import { createLogger } from "../common/logger";
 import { ConsumerCreatedNotification, CreateProducerResponsePayload, Response } from "../protocols/MessageProtocol";
+import { HamokService } from "../services/HamokService";
 import { MediasoupService } from "../services/MediasoupService"
 import { ClientMessageContext } from "./ClientMessageListener";
 import * as mediasoup from 'mediasoup';
@@ -9,29 +10,27 @@ const logger = createLogger('CreateProducerRequestListener');
 
 export type CreateProducerRequestListenerContext = {
 	mediasoupService: MediasoupService,
-	clients: Map<string, ClientContext>,
+	hamokService: HamokService,
 	maxProducerPerClients: number,
 }
 
 export function createCreateProducerRequestListener(listenerContext: CreateProducerRequestListenerContext) {
 	const { 
-		mediasoupService,
-		clients,
+		hamokService,
 	} = listenerContext;
 
 	const result = async (messageContext: ClientMessageContext) => {
 		const { 
 			message: request,
+			client,
 		} = messageContext;
-		const client = clients.get(messageContext.clientId);
+
 		if (request.type !== 'create-producer-request') {
 			return console.warn(`Invalid message type ${request.type}`);
-		} else if (!client) {
-			return console.warn(`Client ${messageContext.clientId} not found`);
-		} else if (!client.routerId) {
-			return console.warn(`Client ${messageContext.clientId} routerId not found`);
+		}else if (!client.routerId) {
+			return console.warn(`Client ${client.clientId} routerId not found`);
 		} else if (client.sndTransport === undefined) {
-			return console.warn(`Client ${messageContext.clientId} has no sending transport`);
+			return console.warn(`Client ${client.clientId} has no sending transport`);
 		} else if (client.mediaProducers.size >= listenerContext.maxProducerPerClients) {
 			return messageContext.send(new Response(
 				request.requestId,
@@ -40,62 +39,60 @@ export function createCreateProducerRequestListener(listenerContext: CreateProdu
 			));
 		}
 
+		let mediaProducer: mediasoup.types.Producer | undefined;
 		let response: CreateProducerResponsePayload | undefined;
 		let error: string | undefined;
 		try {
-			
-
-			const producer = await client.sndTransport.produce({
+			const newproducer = await client.sndTransport.produce({
 				kind: request.kind,
 				rtpParameters: request.rtpParameters,
 			});
 
-			producer.observer.once('close', () => {
-				client.mediaProducers.delete(producer.id);
+			newproducer.observer.once('close', () => {
+				client.mediaProducers.delete(newproducer.id);
 			});
-			client.mediaProducers.add(producer.id);
+			client.mediaProducers.add(newproducer.id);
 
 			response = {
-				producerId: producer.id,
+				producerId: newproducer.id,
 			};
 
-			for (const consumingClient of clients.values()) {
-				if (client.clientId === consumingClient.clientId) continue;
-				if (client.routerId !== consumingClient.routerId) continue;
-
-				if (!consumingClient) continue;
-				try {
-					const consumer = await mediasoupService.consumeMediaProducer(producer.id, consumingClient);
-
-					consumingClient.send(new ConsumerCreatedNotification(
-						consumer.id,
-						producer.id,
-						consumer.kind,
-						consumer.rtpParameters,
-						{
-							producerId: producer.id,
-							paused: producer.paused,
-						},
-						{
-							clientId: client.clientId,
-							userId: client.userId,
-						}
-					))
-				} catch (err) {
-					logger.error(`Error occurred while trying to consume media producer ${producer.id}`, err);
-				}
-			}
-
+			mediaProducer = newproducer;
 		} catch (err) {
 			error = `${err}`;
 		}
 		
-
 		messageContext.send(new Response(
 			request.requestId,
 			response,
 			error
 		));
+
+		if (mediaProducer) {
+			// setInterval(async () => {
+			// 	const stats = await mediaProducer.getStats();
+			// 	console.log('Producer stats', stats);
+			// }, 5000);
+			try {
+				for (const [consumingClientId, consumingClient] of hamokService.clients.entries()) {
+					if (consumingClientId === client.clientId) continue;
+					if (consumingClient.roomId !== client.roomId) continue;
+					if (consumingClient.callId !== client.callId) continue;
+					if (!consumingClient.routerId) continue;
+
+					hamokService.consumeMediaProducer({
+						consumingClientId: consumingClient.clientId,
+						producingClientId: client.clientId,
+						producingUserId: client.userId,
+						mediaProducerId: mediaProducer.id,
+						producingRouterId: client.routerId,
+					});
+				}
+			} catch (err) {
+				logger.error(`Error occurred while trying to consume media producer ${mediaProducer.id}`, err);
+			}
+		}
+
 	};
 	return result;
 }

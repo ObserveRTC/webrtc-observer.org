@@ -7,17 +7,19 @@ import { ClientSampleDecoder } from '@observertc/samples-decoder';
 const logger = createLogger('Client');
 
 export type ClientContext = {
-	routerId?: string,
+	// routerId?: string,
+	created: number,
+	roomId: string,
+	callId: string,
+	clientId: string,
 	sndTransport?: mediasoup.types.WebRtcTransport;
 	rcvTransport?: mediasoup.types.WebRtcTransport;
-	clientId: string,
-	schemaVersion?: string,
 	userId: string,
 	webSocket: WebSocket,
 	mediaProducers: Set<string>;
 	mediaConsumers: Set<string>;
 	send: (message: ClientMessage) => void;
-	decoder?: ClientSampleDecoder,
+	routerId?: string,
 }
 
 /**

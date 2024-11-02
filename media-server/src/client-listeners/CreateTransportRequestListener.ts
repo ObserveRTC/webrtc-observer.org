@@ -4,33 +4,41 @@ import { createLogger } from "../common/logger";
 import { ConsumerCreatedNotification, CreateTransportResponsePayload, Response } from "../protocols/MessageProtocol";
 import { MediasoupService } from "../services/MediasoupService";
 import * as mediasoup from 'mediasoup';
+import { ClientMessageContext } from "./ClientMessageListener";
+import { HamokService } from "../services/HamokService";
 
 const logger = createLogger('CreateTransportRequestListener');
 
 export type CreateTransportRequestListenerContext = {
 		server: Server,
 		mediasoupService: MediasoupService;
-		clients: Map<string, ClientContext>;
+		hamokService: HamokService,
 };
 
 export function createCreateTransportRequestListener(listenerContext: CreateTransportRequestListenerContext) {
 		const { 
 			server,
 			mediasoupService,
-			clients,
+			hamokService,
 		} = listenerContext;
 		
-		const result = async (messageContext: any) => {
+		const result = async (messageContext: ClientMessageContext) => {
 				const { 
+					client,
 					message: request,
+					send,
 				} = messageContext;
-				const client = clients.get(messageContext.clientId);
 
 				if (request.type !== 'create-transport-request') {
 					return console.warn(`Invalid message type ${request.type}`);
-				} else if (!client) {
-					return console.warn(`Client ${messageContext.clientId} not found`);
+				} else if (!client.routerId) {
+					return send(new Response(
+						request.requestId,
+						undefined,
+						`Client ${client.clientId} has not joined a call yet`
+					));
 				}
+
 				const { role, requestId } = request;
 				const router = mediasoupService.routers.get(client.routerId ?? '');
 				const worker = mediasoupService.workers.get(router?.appData.workerPid ?? 0);
@@ -76,11 +84,15 @@ export function createCreateTransportRequestListener(listenerContext: CreateTran
 
 					transport.observer.once('close', () => {
 						if (role === 'producing') client.sndTransport = undefined;
-						else if (role === 'consuming') client.rcvTransport = undefined
-					})
+						else if (role === 'consuming') {
+							client.rcvTransport = undefined;
+						}
+					});
 
 					if (role === 'producing') client.sndTransport = transport;
-					else if (role === 'consuming') client.rcvTransport = transport;
+					else if (role === 'consuming') {
+						client.rcvTransport = transport;
+					}
 					
 					logger.debug(`Transport ${transport.id} iceCandidates: %s`, JSON.stringify(transport.iceCandidates, null, 2))
 					
@@ -103,39 +115,25 @@ export function createCreateTransportRequestListener(listenerContext: CreateTran
 
 
 				if (response && role === 'consuming') {
-					for (const producingClient of clients.values()) {
-						if (client.clientId === producingClient.clientId) continue;
-						if (client.routerId !== producingClient.routerId) continue;
-						
-						if (!producingClient) continue;
+					
+					for (const [producingClientId, producingClient] of hamokService.clients.entries()) {
+						if (producingClientId === client.clientId) continue;
+						if (producingClient.roomId !== client.roomId) continue;
+						if (producingClient.callId !== client.callId) continue;
+						if (!producingClient.routerId) continue;
 
-						for (const mediaProducerId of producingClient.mediaProducers) {
-							const mediaProducer = mediasoupService.mediaProducers.get(mediaProducerId);
-							if (!mediaProducer) {
-								logger.warn(`Media producer ${mediaProducerId} not found in mediasoupService, though the client ${producingClient.clientId} has it`);
-								continue;
-							}
-							try {
-								
-								const consumer = await mediasoupService.consumeMediaProducer(mediaProducerId, client);
-								
-								client.send(new ConsumerCreatedNotification(
-									consumer.id,
-									mediaProducerId,
-									consumer.kind,
-									consumer.rtpParameters,
-									{
-										producerId: mediaProducer.id,
-										paused: mediaProducer.paused,
-									},
-									{
-										clientId: client.clientId,
-										userId: client.userId,
-									}
-								))
-							} catch (err) {
-								logger.error(`Error occurred while trying to consume media producer ${mediaProducerId}`, err);
-							}
+						const mediaProducerIds = (await hamokService.getClientProducers({
+							clientId: producingClientId,
+						})).mediaProducerIds;
+
+						for (const mediaProducerId of mediaProducerIds) {
+							hamokService.consumeMediaProducer({
+								mediaProducerId,
+								producingClientId: producingClient.clientId,
+								producingUserId: producingClient.userId,
+								consumingClientId: client.clientId,
+								producingRouterId: producingClient.routerId,
+							});
 						}
 					}
 				}

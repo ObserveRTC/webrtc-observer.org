@@ -87,6 +87,21 @@ data:
       port: 9081
       serverIp: {{ .Values.publicIP }}
       announcedIp: {{ .Values.publicIP }}
+    maxTransportsPerRouter: 6
+    maxProducerPerClients: 2
+    maxClientLifeTimeInMins: 15
+    hamok:
+      clientsMap:
+        mapId: "webrtc-observer-clients-map"
+      eventEmitter:
+        emitterId: "webrtc-observer-media-service-events"
+      roomsMap:
+        mapId: "webrtc-observer-rooms-map"
+      redis:
+        host: "redis"
+        port: 6379
+      redisChannelId: "webrtc-observer-hamok-message-channel"
+      devMode: false
     mediasoup:
       numberOfWorkers: 2
       workerSettings:

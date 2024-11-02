@@ -2,17 +2,18 @@ import { createEffect } from 'solid-js';
 import { Connection, ConnectionConfig } from '../utils/Connection';
 import { clientStore } from '../stores/LocalClientStore';
 import { addAudioConsumerId, addVideoConsumerId, removeAudioConsumerId, removeVideoConsumerId } from '../stores/RemoteClientsStore';
+import { JoinCallResponsePayload } from '../utils/MessageProtocol';
 
 // const logger = console;
 
 const MAX_BITRATE = 2000000;
 
-let call: Connection;
+let call: Connection | undefined;
 
 declare global {
 	// eslint-disable-next-line no-unused-vars
 	interface Window {
-		call: Connection;
+		call?: Connection;
 	}
 }
 
@@ -27,19 +28,23 @@ createEffect(() => {
 	// }
 });
 
-export const joinToCall = async (config: ConnectionConfig): Promise<void> => {
+export const joinToCall = async (config: ConnectionConfig): Promise<Pick<JoinCallResponsePayload, 'clientCreatedServerTimestamp' | 'clientMaxLifetimeInMs' | 'innerServerIp'>> => {
 
 	try {
 		if (!call) {
 			call = new Connection(config);
 			window.call = call;
-
-			handleCall();
+			call.once('close', () => {
+				call = undefined;
+				window.call = undefined;
+			});
+			handleCall(call);
 		}
 
-		await call.join();
+		return call.join();
 	} catch (error) {
 		console.error('joinToCall error', error);
+		call?.close();
 		throw error;
 		// batch(() => {
 		// 	setTestResults({ mediaConnection: '
@@ -48,10 +53,9 @@ export const joinToCall = async (config: ConnectionConfig): Promise<void> => {
 	}
 };
 
-export const handleCall = (): void => {
+export const handleCall = (call: Connection): void => {
 	call.on('newconsumer', (consumer) => {
 		consumer.resume();
-		console.warn('resumed consumer? ', consumer);
 
 		if (consumer.kind === 'video') {
 			addVideoConsumerId(consumer.id);
@@ -70,6 +74,8 @@ export const handleCall = (): void => {
 };
 
 export const produceMedia = async (): Promise<void> => {
+	if (!call) throw new Error('produceMedia() call not initialized');
+
 	let callError: string | undefined;
 	const onError = (err: any) => (callError = `${err}`);
 
@@ -89,6 +95,7 @@ export const produceMedia = async (): Promise<void> => {
 					{ maxBitrate: MAX_BITRATE, scaleResolutionDownBy: 1 } 
 				]
 			}),
+			
 			call.sndTransport?.produce({ track: micTrack }),
 		]);
 

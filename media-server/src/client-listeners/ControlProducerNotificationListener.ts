@@ -7,25 +7,23 @@ const logger = createLogger('ControlProducerNotificationListener');
 
 export type ControlProducerNotificationListenerContext = {
 	mediasoupService: MediasoupService,
-	clients: Map<string, ClientContext>,
 }
 
 export function createControlProducerNotificationListener(listenerContext: ControlProducerNotificationListenerContext): ClientMessageListener {
 	const { 
 		mediasoupService,
-		clients,
 	} = listenerContext;
 
 	const result = async (messageContext: ClientMessageContext) => {
 		const { 
 			message: request,
+			client,
 		} = messageContext;
-		const client = clients.get(messageContext.clientId);
 
 		if (request.type !== 'control-producer-notification') {
 			return console.warn(`Invalid message type ${request.type}`);
 		} else if (!client?.mediaProducers.has(request.producerId)) {
-			return console.warn(`Producer ${request.producerId} not found for client ${messageContext.clientId}`);
+			return console.warn(`Producer ${request.producerId} not found for client ${client.clientId}`);
 		}
 
 		const producer = mediasoupService.mediaProducers.get(request.producerId);

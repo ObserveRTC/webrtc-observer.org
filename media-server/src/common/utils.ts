@@ -202,6 +202,25 @@ const famousMovies: string[] = [
 
 import { v4 as uuidv4 } from 'uuid';
 
-export function createRandomCallId() {
-    return `${famousMovies[Math.floor(Math.random() * famousMovies.length)]}-${uuidv4().substring(0, 8)}`;
+export function createRandomCallId(): [roomId: string, callId: string] {
+    const roomId = famousMovies[Math.floor(Math.random() * famousMovies.length)];
+    return [roomId, `${roomId}-${uuidv4().substring(0, 8)}`];
+}
+
+export function cmpUuids(uuid1: string, uuid2: string): number {
+    const uuid1Parts = uuid1.split('-');
+    const uuid2Parts = uuid2.split('-');
+
+    for (let i = 0; i < 5; i++) {
+        const uuid1Part = parseInt(uuid1Parts[i], 16);
+        const uuid2Part = parseInt(uuid2Parts[i], 16);
+
+        if (uuid1Part < uuid2Part) {
+            return -1;
+        } else if (uuid1Part > uuid2Part) {
+            return 1;
+        }
+    }
+
+    return 0;
 }
