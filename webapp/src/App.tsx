@@ -8,12 +8,19 @@ import VideoCall from './views/VideoCall';
 import Main from './views/Main';
 import { clientStore } from './stores/LocalClientStore';
 import ClientMonitorProperties from './views/ClientMonitorProperties';
+import SimpleCountdown from './components/Countdown/SimpleCountdown';
 
 
 const App: Component = () => {
 	return (
 		<Grid container spacing={2}>
-			<Grid item xs={9}>
+			<Grid item xs={2}>
+				<Show when={clientStore.clientMaxLifetimeInMs}>
+					<p>Time left before the client is closed:</p>
+					<SimpleCountdown millis={(clientStore.clientMaxLifetimeInMs ?? 0) - (Date.now() - (clientStore.clientCreatedServerTimestamp ?? 0))} onZero={() => clientStore.call?.close()}/>
+				</Show>
+			</Grid>
+			<Grid item xs={7}>
 				<Transition name='fade' mode='outin'>
 					<Switch>
 						<Match when={page() === 'main'}><Main/></Match>

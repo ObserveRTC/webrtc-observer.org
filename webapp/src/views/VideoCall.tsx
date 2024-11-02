@@ -9,7 +9,6 @@ import RemoteClientVideo from '../components/RemoteClientVideo';
 import RemoteClientAudio from '../components/RemoteClientAudio';
 import { clientStore } from '../stores/LocalClientStore';
 import { writeClipboard } from '@solid-primitives/clipboard';
-import Countdown from '../components/Countdown/Countdown';
 // import { setTestState } from '../signals/signals';
 // import Button from '../components/Button';
 
@@ -52,7 +51,6 @@ const VideoCall: Component = () => {
 					</IconButton>
 					{copyBtnText()}
 				</div>
-				<Countdown millis={(clientStore.clientMaxLifetimeInMs ?? 0) - (Date.now() - (clientStore.clientCreatedServerTimestamp ?? 0))} onZero={() => clientStore.call?.close()}/>
 			</Box>
 			
 
