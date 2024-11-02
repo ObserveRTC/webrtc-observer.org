@@ -26,6 +26,7 @@ import { createPipedMediaConsumerClosedListener } from "./hamok-listeners/PipedM
 import { createGetClientProducersListener } from "./hamok-listeners/GetClientProducersListener";
 import { IntervalTrackerService } from "./services/IntervalTrackerService";
 import { createCloseClientInterval } from "./intervals/CloseClientInterval";
+import { createClientMonitorSampleListener } from "./hamok-listeners/ClientMonitorSampleListener";
 
 const logger = createLogger('main');
 const mediasoupService = new MediasoupService(config.mediasoup);
@@ -121,9 +122,10 @@ hamokService
     .on('client-left', (callId, clientId) => {
         observer.observedCalls.get(callId)?.clients.get(clientId)?.close();
     })
-    .on('client-sample', message => {
-
-    })
+    .on('client-sample', createClientMonitorSampleListener({
+        observer,
+        mainEmitter,
+    }))
     .on('create-pipe-transport-request', createPipeTransportListener({
         mediasoupService,
     }))
