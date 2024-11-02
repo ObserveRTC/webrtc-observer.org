@@ -51,7 +51,7 @@ spec:
   gatewayClassName: stunner-gatewayclass
   listeners:
     - name: tcp-listener
-      port: 3478
+      port: 443
       protocol: TURN-TCP
 ---
 apiVersion: stunner.l7mp.io/v1
