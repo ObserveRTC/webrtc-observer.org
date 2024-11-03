@@ -15,3 +15,14 @@ body {
 .fade-exit-to {
 	opacity: 0;
 }
+
+a {
+    color: #5C9FCC; /* pastel blue */
+    text-decoration: underline;
+    transition: color 0.3s ease, text-decoration 0.3s ease;
+}
+
+a:hover {
+    color: #3A82B7; /* darker shade on hover */
+    text-decoration: none;
+}

@@ -1,9 +1,11 @@
-import { Show, createSignal, type Component } from 'solid-js';
-import { ErrorPaperItem } from '../components/PaperItem';
-import { Grid } from '@suid/material';
+import { createSignal, type Component, Show } from 'solid-js';
 import Section from '../components/Section';
-import { setPage } from '../signals/signals';
 import ClientMonitor from '../components/ClientMonitor/ClientMonitor';
+import { Grid } from '@suid/material';
+import { setPage } from '../signals/signals';
+import { clientStore } from '../stores/LocalClientStore';
+
+
 
 // import { setTestState } from '../signals/signals';
 // import Button from '../components/Button';
@@ -16,24 +18,54 @@ const ClientMonitorProperties: Component = () => {
 
 	return (
 		<Grid container spacing={2}>
-			<Show when={error()}>
-				<Grid item xs={12}>
-					<ErrorPaperItem>{error()}</ErrorPaperItem>
-				</Grid>
-			</Show>
 			<Grid item xs={12}>
-				<Section title="ClientMonitor Properties">
+				<Section title={'ClientMonitor'}>
 					<p class='text-left text-base font-sans text-gray-600 antialiased text-justify'>
-                        ClientMonitor Properties
+				The ClientMonitor class from 
+						<a href="https://www.npmjs.com/package/@observertc/client-monitor-js" >ObserveRTC’s @observertc/client-monitor-js</a>  library is designed to monitor and gather WebRTC statistics and 
+				performance metrics from client applications. It serves as a comprehensive 
+				tool for tracking the health, efficiency, and performance of WebRTC connections, 
+				allowing developers to capture real-time information and diagnostics about WebRTC 
+				sessions in their applications.
 					</p>
 
-					<ClientMonitor />
+					<Show when={clientStore.call} fallback={(
+						<b>Please join a call to see the ClientMonitor in action.</b>
+					)}>
+						<ClientMonitor />
+					</Show>
 				</Section>
 
-				<a href="#" class="text-sm text-blue-600 dark:text-blue-500 hover:underline" onClick={() => setPage('main')}>Back</a>
+				<Section>
+					<a href="#" class="text-sm text-blue-600 dark:text-blue-500 hover:underline" onClick={() => setPage('main')}>Back</a>
+				</Section>
+				
 			</Grid>
 		</Grid>
+
+		
 	);
+
+	// return (
+	// 	<Grid container spacing={2}>
+	// 		<Show when={error()}>
+	// 			<Grid item xs={12}>
+	// 				<ErrorPaperItem>{error()}</ErrorPaperItem>
+	// 			</Grid>
+	// 		</Show>
+	// 		<Grid item xs={12}>
+	// 			<Section title="ClientMonitor Properties">
+	// 				<p class='text-left text-base font-sans text-gray-600 antialiased text-justify'>
+	//                     ClientMonitor Properties
+	// 				</p>
+
+	// 				<ClientMonitor />
+	// 			</Section>
+
+	// 			<a href="#" class="text-sm text-blue-600 dark:text-blue-500 hover:underline" onClick={() => setPage('main')}>Back</a>
+	// 		</Grid>
+	// 	</Grid>
+	// );
 };
 
 export default ClientMonitorProperties;

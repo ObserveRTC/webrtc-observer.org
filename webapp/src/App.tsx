@@ -10,6 +10,8 @@ import { clientStore } from './stores/LocalClientStore';
 import ClientMonitorProperties from './views/ClientMonitorProperties';
 import SimpleCountdown from './components/Countdown/SimpleCountdown';
 import Section from './components/Section';
+import StunnerPage from './views/StunnerPage';
+import IceConnectionPage from './views/IceConnectionPage';
 
 
 const App: Component = () => {
@@ -26,6 +28,8 @@ const App: Component = () => {
 				<Transition name='fade' mode='outin'>
 					<Switch>
 						<Match when={page() === 'main'}><Main/></Match>
+						<Match when={page() === 'stunner'}><StunnerPage /></Match>
+						<Match when={page() === 'ice-connection-page'}><IceConnectionPage /></Match>
 						<Match when={page() === 'client-monitor-properties'}><ClientMonitorProperties /></Match>
 						<Match when={page() === 'videoCall'}><VideoCall /></Match>
 						<Match when={page() === 'observer'}><ObserverView /></Match>

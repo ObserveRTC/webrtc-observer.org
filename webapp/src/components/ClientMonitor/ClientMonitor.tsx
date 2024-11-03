@@ -21,16 +21,22 @@ const ClientMonitor: Component = () => {
 	});
 	return (
 		<>
-			<Box full={true}>
-				<Show when={error()}>
+			<Show when={error()}>
+				<Box full={true}>
 					<ErrorPaperItem>{error()}</ErrorPaperItem>
-				</Show>
-			</Box>
+				</Box>
+			</Show>
 			<Show when={(monitor())} keyed>{(m) => {
 				return (
-					<ShowObject 
-						{...createClientMonitorProps(m)}
-					/>
+					<>
+						<p class='text-left text-base font-sans text-gray-600 antialiased text-justify'>
+							An instance of the ClientMonitor class has the following properties: (<b>UNDER DEVELOPMENT</b>)
+						</p>
+						<ShowObject 
+							{...createClientMonitorProps(m)}
+						/>
+					</>
+					
 				);
 			}}</Show>
 			

@@ -34,33 +34,27 @@ const Main: Component = () => {
 					<p class='text-left text-base font-sans text-gray-600 antialiased text-justify'>
                         STUNner is an open-source project designed to facilitate the deployment of WebRTC services within Kubernetes environments. It acts as a media gateway that provides standards-compliant STUN/TURN functionalities to ingest real-time media into a Kubernetes cluster, enabling a seamless integration of WebRTC services into the cloud-native ecosystem.
 					</p>
-					<a href="#" class="text-sm text-blue-600 dark:text-blue-500 hover:underline" onClick={() => setPage('main')}>
-                        Monitor STUNner
+					<a href="#" class="text-sm text-blue-600 dark:text-blue-500 hover:underline" onClick={() => setPage('ice-connection-page')}>
+                        See ICE connection
 					</a>
-					<a href="#" class="text-sm text-blue-600 dark:text-blue-500 hover:underline" onClick={() => setPage('main')}>
-                        Check Deployment scripts
-					</a>
-					<a href="#" class="text-sm text-blue-600 dark:text-blue-500 hover:underline" onClick={() => setPage('main')}>
+					<a href="#" class="text-sm text-blue-600 dark:text-blue-500 hover:underline" onClick={() => setPage('stunner')}>
                         Learn more about STUNner
 					</a>
 				</Section>
 
 				<Section title="ClientMonitor" subsection={true}>
-					<p class='text-left text-base font-sans text-gray-600 antialiased text-justify'>
-                        Short Intro about ClientMonitor
-					</p>
 					<a href="#" class="text-sm text-blue-600 dark:text-blue-500 hover:underline" onClick={() => setPage('client-monitor-properties')}>
                         See ClientMonitor Properties
 					</a>
-					<a href="#" class="text-sm text-blue-600 dark:text-blue-500 hover:underline" onClick={() => setPage('main')}>
+					{/* <a href="#" class="text-sm text-blue-600 dark:text-blue-500 hover:underline" onClick={() => setPage('main')}>
                         Detect Issues
 					</a>
 					<a href="#" class="text-sm text-blue-600 dark:text-blue-500 hover:underline" onClick={() => setPage('main')}>
                         Send Samples
-					</a>
+					</a> */}
 				</Section>
 
-				<Section title="Observer" subsection={true}>
+				{/* <Section title="Observer" subsection={true}>
 					<p class='text-left text-base font-sans text-gray-600 antialiased text-justify'>
                         Short Intro about Observer
 					</p>
@@ -70,7 +64,7 @@ const Main: Component = () => {
 					<a href="#" class="text-sm text-blue-600 dark:text-blue-500 hover:underline" onClick={() => setPage('main')}>
                         Show Turn Statistics
 					</a>
-				</Section>
+				</Section> */}
 
 
 				<Section title="About" subsection={false}>

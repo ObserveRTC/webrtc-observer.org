@@ -6,6 +6,7 @@ export type Page =
     | 'stunner'
     | 'videoCall' 
     | 'client-monitor-properties'
+    | 'ice-connection-page'
     | 'exit' 
     | 'observer';
 
