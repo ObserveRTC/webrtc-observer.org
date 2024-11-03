@@ -148,7 +148,6 @@ export class Server extends EventEmitter {
                 return ws.close(4001, 'Server error');
             }
 
-            // console.warn("\n\n", url.parse(req.url, true).query, "\n\n");
             const query = url.parse(req.url ?? '', true).query;
             const clientId = query.clientId as string;
             // const schemaVersion = query.schemaVersion as string;

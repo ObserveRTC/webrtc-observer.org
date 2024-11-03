@@ -19,9 +19,9 @@ export function createTransportConnectedNotificationListener(listenerContext: Tr
 			const client = clients.get(messageContext.clientId);
 
 			if (notification.type !== 'transport-connected-notification') {
-				return console.warn(`Invalid message type ${notification.type}`);
+				return logger.warn(`Invalid message type ${notification.type}`);
 			} else if (!client) {
-				return console.warn(`Client ${messageContext.clientId} not found`);
+				return logger.warn(`Client ${messageContext.clientId} not found`);
 			}
 
 			const { dtlsParameters, role } = notification;

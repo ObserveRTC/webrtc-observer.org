@@ -127,7 +127,6 @@ export class Connection extends EventEmitter {
 			callId: this.config.callId,
 		});
 
-		console.warn('response', response);
 		const { 
 			iceServers,
 			callId, 
@@ -334,7 +333,6 @@ export class Connection extends EventEmitter {
 			action: 'pause',
 		});
 		const onResume = () =>{
-			// console.warn('resume');
 			this._notify('control-consumer-notification', { 
 				consumerId: consumer.id,
 				action: 'resume',

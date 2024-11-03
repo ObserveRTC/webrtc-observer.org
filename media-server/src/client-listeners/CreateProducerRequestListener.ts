@@ -26,11 +26,11 @@ export function createCreateProducerRequestListener(listenerContext: CreateProdu
 		} = messageContext;
 
 		if (request.type !== 'create-producer-request') {
-			return console.warn(`Invalid message type ${request.type}`);
+			return logger.warn(`Invalid message type ${request.type}`);
 		}else if (!client.routerId) {
-			return console.warn(`Client ${client.clientId} routerId not found`);
+			return logger.warn(`Client ${client.clientId} routerId not found`);
 		} else if (client.sndTransport === undefined) {
-			return console.warn(`Client ${client.clientId} has no sending transport`);
+			return logger.warn(`Client ${client.clientId} has no sending transport`);
 		} else if (client.mediaProducers.size >= listenerContext.maxProducerPerClients) {
 			return messageContext.send(new Response(
 				request.requestId,

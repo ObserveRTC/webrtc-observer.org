@@ -38,7 +38,7 @@ export function createJoinCallRequestListener(listenerContext: JoinCallRequestLi
 				} = messageContext;
 				
 				if (request.type !== 'join-call-request') {
-					return console.warn(`Invalid message type ${request.type}`);
+					return logger.warn(`Invalid message type ${request.type}`);
 				} else if (client.routerId) {
 					return messageContext.send(new Response(
 						request.requestId,

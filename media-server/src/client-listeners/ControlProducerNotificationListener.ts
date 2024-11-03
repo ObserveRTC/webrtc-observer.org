@@ -21,14 +21,14 @@ export function createControlProducerNotificationListener(listenerContext: Contr
 		} = messageContext;
 
 		if (request.type !== 'control-producer-notification') {
-			return console.warn(`Invalid message type ${request.type}`);
+			return logger.warn(`Invalid message type ${request.type}`);
 		} else if (!client?.mediaProducers.has(request.producerId)) {
-			return console.warn(`Producer ${request.producerId} not found for client ${client.clientId}`);
+			return logger.warn(`Producer ${request.producerId} not found for client ${client.clientId}`);
 		}
 
 		const producer = mediasoupService.mediaProducers.get(request.producerId);
 		if (!producer) {
-			return console.warn(`Producer ${request.producerId} not found`);
+			return logger.warn(`Producer ${request.producerId} not found`);
 		}
 
 		try {

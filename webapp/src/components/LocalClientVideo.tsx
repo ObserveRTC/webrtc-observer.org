@@ -46,6 +46,9 @@ const LocalClientVideo: Component<{showControls?: boolean}> = (props) => {
 				<Button onClick={ () => setAudioAction(audioAction() === 'enable' ? 'disable' : 'enable') }>
 					{ (audioAction() === 'enable' ? 'disable' : 'enable').concat(' mic') }
 				</Button>
+				<Button onClick={ () => clientStore.call?.close() }>
+					Close
+				</Button>
 			</Show>
 		</>
 		

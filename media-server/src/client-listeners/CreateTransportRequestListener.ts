@@ -30,7 +30,7 @@ export function createCreateTransportRequestListener(listenerContext: CreateTran
 				} = messageContext;
 
 				if (request.type !== 'create-transport-request') {
-					return console.warn(`Invalid message type ${request.type}`);
+					return logger.warn(`Invalid message type ${request.type}`);
 				} else if (!client.routerId) {
 					return send(new Response(
 						request.requestId,

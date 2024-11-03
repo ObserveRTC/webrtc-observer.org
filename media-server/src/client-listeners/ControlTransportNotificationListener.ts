@@ -18,7 +18,7 @@ export function createControlTransportNotificationListener(listenerContext: Crea
 		} = messageContext;
 		
 		if (notification.type !== 'control-transport-notification') {
-			return console.warn(`Invalid message type ${notification.type}`);
+			return logger.warn(`Invalid message type ${notification.type}`);
 		}
 
 		try {

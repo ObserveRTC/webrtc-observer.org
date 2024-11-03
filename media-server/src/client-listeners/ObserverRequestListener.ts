@@ -24,7 +24,7 @@ export function createObserverRequestListener(listenerContext: ClientMonitorSamp
 		} = messageContext;
 		
 		if (request.type !== 'observer-request') {
-			return console.warn(`Invalid message type ${request.type}`);
+			return logger.warn(`Invalid message type ${request.type}`);
 		}
 
 		const {

@@ -4,24 +4,6 @@ import { ClientMonitor } from '@observertc/client-monitor-js';
 import PeerConnectionEntryCmp from './PeerConnectionEntryCmp';
 import { ClientMonitorEntryRender } from './ClientMonitorShowEntry';
 import EntryBaseCmp, { IterableNavigationItem, NavigationItem } from './EntryBaseCmp';
-// import OutboundRtpEntryCmp from './OutboundRtpEntryCmp';
-// import ContributingSourceEntryCmp from './ContributingSourceEntryCmp';
-// import CertificateEntryCmp from './CertificateEntryCmp';
-// import CodecEntryCmp from './CodecEntryCmp';
-// import DataChannelEntryCmp from './DataChannelEntry';
-// import IceCandidatePairEntryCmp from './IceCandidatePairEntryCmp';
-// import IceServerEntryCmp from './IceServerEntryCmp';
-// import InboundRtpEntryCmp from './InboundRtpEntryCmp';
-// import LocalCandidateEntryCmp from './LocalCandidateEntryCmp';
-// import MediaSourceEntryCmp from './MediaSourceEntryCmp';
-// import ReceiverEntryCmp from './ReceiverEntryCmp';
-// import RemoteCandidateEntryCmp from './RemoteCandidateEntryCmp';
-// import RemoteInboundRtpEntryCmp from './RemoteInboundRtpEntryCmp';
-// import RemoteOutboundRtpEntryCmp from './RemoteOutboundRtpEntryCmp';
-// import SctpTransportEntryCmp from './SctpTransportEntryCmp';
-// import SenderEntryCmp from './SenderEntryCmp';
-// import TransceiverEntryCmp from './TransceiverEntryCmp';
-// import TransportEntryCmp from './TransportEntryCmp';
 
 export type ClientMonitorProps = {
 	entry: ClientMonitor;

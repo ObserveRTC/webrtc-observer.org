@@ -30,7 +30,6 @@ export function SimpleLineChart(props: SimpleLineChartProps) {
 			else return '';
 		}
 	};
-	console.warn('SimpleLineChart', props);
 	return (
 		<div class='h-64'>
 			<EChartsAutoSize option={{
@@ -45,8 +44,6 @@ export function SimpleLineChart(props: SimpleLineChartProps) {
 						const timestamp = props.timestamps[dataItem[0].dataIndex];
 						const value = Math.round(props.values[dataItem[0].dataIndex] * 100) / 100;
 						
-						// console.warn('dataItem', dataItem);
-
 						return `${value} at ${new Date(timestamp).toLocaleString()}`;
 					}
 				},

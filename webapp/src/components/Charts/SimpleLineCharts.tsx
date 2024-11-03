@@ -40,8 +40,6 @@ export function SimpleLineCharts(props: SimpleLineChartsProps) {
 						// const value = Math.round(props.values[dataItem[0].dataIndex] * 100) / 100;
 						const value = props.series.map((serie) => `${serie.name}: ${serie.values[dataItem[0].dataIndex]}`).join('<br />');
 						
-						// console.warn('dataItem', dataItem);
-
 						return `At ${new Date(timestamp).toLocaleString()}<br />${value}`;
 					}
 				},

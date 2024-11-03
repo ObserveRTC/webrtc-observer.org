@@ -21,14 +21,14 @@ export function createControlConsumerNotificationListener(listenerContext: Contr
 		} = messageContext;
 
 		if (request.type !== 'control-consumer-notification') {
-			return console.warn(`Invalid message type ${request.type}`);
+			return logger.warn(`Invalid message type ${request.type}`);
 		} else if (!client?.mediaConsumers.has(request.consumerId)) {
-			return console.warn(`Consumer ${request.consumerId} not found for client ${client.clientId}`);
+			return logger.warn(`Consumer ${request.consumerId} not found for client ${client.clientId}`);
 		}
 		
 		const consumer = mediasoupService.mediaConsumers.get(request.consumerId);
 		if (!consumer) {
-			return console.warn(`Consumer ${request.consumerId} not found`);
+			return logger.warn(`Consumer ${request.consumerId} not found`);
 		}
 
 		logger.debug(`Client ${client.clientId} controlling consumer ${consumer.id}. request: %o`, request);

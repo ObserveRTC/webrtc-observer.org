@@ -27,7 +27,7 @@ export function createClientMonitorSampleNotificatinListener(listenerContext: Cl
 		} = messageContext;
 
 		if (notification.type !== 'client-monitor-sample-notification') {
-			return console.warn(`Invalid message type ${notification.type}`);
+			return logger.warn(`Invalid message type ${notification.type}`);
 		}
 		
 		hamokService.publishClientSample({

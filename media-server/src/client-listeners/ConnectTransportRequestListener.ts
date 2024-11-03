@@ -1,7 +1,5 @@
-import { ClientContext } from "../common/ClientContext";
 import { createLogger } from "../common/logger";
 import { ConnectTransportResponsePayload, Response } from "../protocols/MessageProtocol";
-import { MediasoupService } from "../services/MediasoupService"
 import { ClientMessageContext } from "./ClientMessageListener";
 
 const logger = createLogger('ConnectTransportRequestListener');
@@ -20,7 +18,7 @@ export function createConnectTransportRequestListener(listenerContext: ConnectTr
 				} = messageContext;
 				
 				if (request.type !== 'connect-transport-request') {
-					return console.warn(`Invalid message type ${request.type}`);
+					return logger.warn(`Invalid message type ${request.type}`);
 				}
 
 				let response: ConnectTransportResponsePayload | undefined;

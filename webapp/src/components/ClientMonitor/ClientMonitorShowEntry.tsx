@@ -15,7 +15,6 @@ const ClientMonitorShowEntry: Component = () => {
 
 	return (
 		<Show when={actualEntry()} keyed>{entry => {
-			console.warn('entry', entry);
 			return (
 				<Box title={entry.name} full={true}>
 					{entry.action()}

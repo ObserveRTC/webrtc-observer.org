@@ -88,17 +88,17 @@ const EntryBaseCmp: Component<EntryBaseCmpProps> = (props: EntryBaseCmpProps) =>
 												<Show when={element()}>
 													{element()}
 												</Show>
+												<button
+													onClick={() => props.next({
+														name: item.key,
+														action: item.action
+													})}
+													class='flex justify-center rounded-md bg-indigo-600 p-1.5 mt-4 font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:bg-slate-200'
+												>
+													{item.key}
+												</button>
 											</TableCell>
 										</TableRow>
-										// <button
-										// 	onClick={() => props.next({
-										// 		name: item.key,
-										// 		action: item.action
-										// 	})}
-										// 	class='flex justify-center rounded-md bg-indigo-600 p-1.5 mt-4 font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:bg-slate-200'
-										// >
-										// 	{item.key}
-										// </button>
 									);}
 								}
 							</For>
