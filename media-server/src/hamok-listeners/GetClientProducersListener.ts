@@ -23,6 +23,8 @@ export function createGetClientProducersListener(listenerContext: CreateGetClien
 
 		const client = server.clients.get(clientId);
 
+		logger.info(`GetClientProducersListener: ${clientId}: %o`, client);
+
 		if (!client || !client.routerId) return;
 
 		respond({

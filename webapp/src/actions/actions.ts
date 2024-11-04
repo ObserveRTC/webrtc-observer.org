@@ -57,6 +57,8 @@ export const handleCall = (call: Connection): void => {
 	call.on('newconsumer', (consumer) => {
 		consumer.resume();
 
+		console.warn('new consumer', consumer);
+
 		if (consumer.kind === 'video') {
 			addVideoConsumerId(consumer.id);
 		} else {

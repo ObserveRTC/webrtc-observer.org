@@ -282,7 +282,7 @@ export class HamokService extends EventEmitter<HamokServiceEventMap> {
 
         logger.info('Starting HamokService');
 
-        setHamokLogLevel('info');
+        setHamokLogLevel('debug');
 		addHamokLogTransport({
 			target: 'pino-pretty',
   		    options: { destination: 0 } // use 2 for stderr
@@ -297,8 +297,8 @@ export class HamokService extends EventEmitter<HamokServiceEventMap> {
 
         if (this._devHamok) {
             // for local try purpose, because hamok cannot work without at least 2 instance
-            this._devHamok.on('message', msg => this._channel.send(msg));
-            this._channel.on('message', msg => this._devHamok?.accept(msg));
+            this._devHamok.on('message', msg => this.hamok.accept(msg));
+            this.hamok.on('message', msg => this._devHamok?.accept(msg));
             this.hamok.once('close', () => this._devHamok?.close());
 
             this._devHamok.join({
@@ -307,12 +307,81 @@ export class HamokService extends EventEmitter<HamokServiceEventMap> {
             }).catch(err => logger.error('Failed to join dev hamok', err));
         }
 
+        this.hamok.on('joined', async () => {
+            logger.info('Hamok joined %s', this.eventEmitter.hasSubscribers('create-pipe-transport-request', true));
+            
+            if (!await this.eventEmitter.hasSubscribers('client-sample', true)) {
+                await this.eventEmitter.subscribe('client-sample', (message) => {
+                    this.emit('client-sample', message);
+                });
+            }
+            
+            if (!await this.eventEmitter.hasSubscribers('create-pipe-transport-request', true)) {
+                await this.eventEmitter.subscribe('create-pipe-transport-request', (requestId, payload) => {
+                    this.emit('create-pipe-transport-request', payload, createNonVoidResponseCallback(requestId));
+                });
+            }
+    
+            if (!await this.eventEmitter.hasSubscribers('connect-pipe-transport-request', true)) {
+                await this.eventEmitter.subscribe('connect-pipe-transport-request', (requestId, payload) => {
+                    this.emit('connect-pipe-transport-request', payload, createVoidResponseCallback(requestId));
+                });
+            }
+    
+            if (!await this.eventEmitter.hasSubscribers('pipe-media-producer-to', true)) {
+                await this.eventEmitter.subscribe('pipe-media-producer-to', (requestId, payload) => {
+                    this.emit('pipe-media-producer-to', payload, createNonVoidResponseCallback(requestId));
+                });
+            }
+    
+            if (!await this.eventEmitter.hasSubscribers('get-client-producers-request', true)) {
+                await this.eventEmitter.subscribe('get-client-producers-request', (requestId, payload) => {
+                    this.emit('get-client-producers-request', payload, createNonVoidResponseCallback(requestId));
+                });
+            }
+    
+            if (!await this.eventEmitter.hasSubscribers('consume-media-producer', true)) {
+                await this.eventEmitter.subscribe('consume-media-producer', (payload) => {
+                    this.emit('consume-media-producer', payload);
+                });
+            }
+    
+            if (!await this.eventEmitter.hasSubscribers('piped-media-consumer-closed', true)) {
+                await this.eventEmitter.subscribe('piped-media-consumer-closed', (payload) => {
+                    this.emit('piped-media-consumer-closed', payload);
+                });
+            }
+    
+            if (!await this.eventEmitter.hasSubscribers('response', true)) {
+                await this.eventEmitter.subscribe('response', (requestId, response) => {
+                    const pendingRequest = this._pendingRequests.get(requestId);
+    
+                    if (!pendingRequest) return;
+    
+                    clearTimeout(pendingRequest.timer);
+                    if (response.error) {
+                        pendingRequest.reject(response.error);
+                    } else {
+                        pendingRequest.resolve(response.payload);
+                    }
+                });
+            }            
+        });
+
 		await this.hamok.join({
 			fetchRemotePeerTimeoutInMs: 2000,
 			maxRetry: 50,
 		});
 
-        logger.debug('Hamok joined');
+        this.eventEmitter.subscriptions
+            .on('added', (event, peerId, metaData) => {
+                logger.debug(`Peer ${peerId} subscribed to ${event} with metadata: %o`, metaData);
+            })
+            .on('removed', (event, peerId) => {
+                logger.debug(`Peer ${peerId} unsubscribed from ${event}`);
+            })
+            ;
+
 
         const createNonVoidResponseCallback = <T extends object>(requestId: string): HamokServiceResponseField<T> => ((payload?: T, error?: string) => {
             this.eventEmitter.notify('response', requestId, {
@@ -326,55 +395,6 @@ export class HamokService extends EventEmitter<HamokServiceEventMap> {
                 payload: err ? undefined : {}
             });
         }) as HamokServiceResponseField<void>;
-
-        await this.eventEmitter.subscribe('client-sample', (message) => {
-            this.emit('client-sample', message);
-        });
-        logger.debug('Subscribed to client-sample channel');
-
-        await this.eventEmitter.subscribe('create-pipe-transport-request', (requestId, payload) => {
-            this.emit('create-pipe-transport-request', payload, createNonVoidResponseCallback(requestId));
-        });
-        logger.debug('Subscribed to create-pipe-transport-request channel');
-
-        await this.eventEmitter.subscribe('connect-pipe-transport-request', (requestId, payload) => {
-            this.emit('connect-pipe-transport-request', payload, createVoidResponseCallback(requestId));
-        });
-        logger.debug('Subscribed to connect-pipe-transport-request channel');
-
-        await this.eventEmitter.subscribe('pipe-media-producer-to', (requestId, payload) => {
-            this.emit('pipe-media-producer-to', payload, createNonVoidResponseCallback(requestId));
-        });
-        logger.debug('Subscribed to pipe-media-producer-to channel');
-
-        await this.eventEmitter.subscribe('get-client-producers-request', (requestId, payload) => {
-            this.emit('get-client-producers-request', payload, createNonVoidResponseCallback(requestId));
-        });
-        logger.debug('Subscribed to get-client-producers-request channel');
-
-        await this.eventEmitter.subscribe('consume-media-producer', (payload) => {
-            this.emit('consume-media-producer', payload);
-        });
-        logger.debug('Subscribed to consume-media-producer channel');
-
-        await this.eventEmitter.subscribe('piped-media-consumer-closed', (payload) => {
-            this.emit('piped-media-consumer-closed', payload);
-        });
-        logger.debug('Subscribed to piped-media-consumer-closed channel');
-
-        await this.eventEmitter.subscribe('response', (requestId, response) => {
-            const pendingRequest = this._pendingRequests.get(requestId);
-
-            if (!pendingRequest) return;
-
-            clearTimeout(pendingRequest.timer);
-            if (response.error) {
-                pendingRequest.reject(response.error);
-            } else {
-                pendingRequest.resolve(response.payload);
-            }
-        });
-        logger.debug('Subscribed to response channel');
 
         logger.info('HamokService started');
     }
@@ -498,11 +518,11 @@ export class HamokService extends EventEmitter<HamokServiceEventMap> {
 	}
 
     private _remotePeerJoined(peerId: string) {
-		logger.info('Remote peer joined', peerId);
+		logger.info('Remote peer joined: %s', peerId);
 	}
 
 	private _remotePeerLeft(peerId: string) {
-		logger.info('Remote peer left', peerId);
+		logger.info('Remote peer left: %s', peerId);
 		
 		if (this.hamok.leader) {
             // if this node is the leader and another peer left, maybe we need to do something with some stuffs?
