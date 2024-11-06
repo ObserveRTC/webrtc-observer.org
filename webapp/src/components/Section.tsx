@@ -5,12 +5,13 @@ type SectionProps = {
 	logo?: string;
 	children?: JSX.Element;
 	subsection?: boolean;
+	full?: boolean;
 }
 
 const Section: Component<SectionProps> = (props) => {
 	const divClass = [
 		'mt-8 mx-4 sm:mx-auto',
-		'max-w-4xl',
+		props.full ? 'max-w-8xl' : 'max-w-4xl',
 		// 'sm:w-full',
 	].join(' ');
 	const h1Class = [
