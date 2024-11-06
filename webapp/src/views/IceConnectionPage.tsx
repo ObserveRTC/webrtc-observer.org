@@ -1,10 +1,10 @@
-import { createSignal, Show, type Component, For } from 'solid-js';
+import { createSignal, Show, type Component, For, onMount, onCleanup } from 'solid-js';
 import { Grid } from '@suid/material';
 import Section from '../components/Section';
 import { setPage } from '../signals/signals';
 import { clientStore } from '../stores/LocalClientStore';
 import GenericTable from '../components/GeneralTable';
-import { LocalCandidateEntry, RemoteCandidateEntry } from '@observertc/client-monitor-js';
+import { LocalCandidateEntry, PeerConnectionEntry, RemoteCandidateEntry } from '@observertc/client-monitor-js';
 
 // import { setTestState } from '../signals/signals';
 // import Button from '../components/Button';
@@ -14,7 +14,8 @@ import { LocalCandidateEntry, RemoteCandidateEntry } from '@observertc/client-mo
 const IceConnectionPage: Component = () => {
 	// eslint-disable-next-line no-unused-vars
 	const [ error, setError ] = createSignal<string | undefined>();
-
+	const [ peerConnections, setPeerConnections ] = createSignal<PeerConnectionEntry[] | undefined>();
+	const [ listener, setListener ] = createSignal<{ func: () => void }>({ func: () => {} });
 	// clientStore.call?.monitor.
 	const getCandidateTypeString = (candidateType?: LocalCandidateEntry | RemoteCandidateEntry) => {
 		if (!candidateType) return '';
@@ -22,6 +23,21 @@ const IceConnectionPage: Component = () => {
 			return `relay (${candidateType.stats.protocol}) ${candidateType.stats.url}`;
 		}
 	};
+
+	onMount(() => {
+		const func = () => {
+			const peerConnections = clientStore.call?.monitor?.peerConnections;
+			peerConnections && setPeerConnections([...peerConnections]);
+		};
+		setListener({ func });
+
+		clientStore.call?.monitor?.on('stats-collected', func);
+	});
+
+	onCleanup(() => {
+		clientStore.call?.monitor?.off('stats-collected', listener().func);
+	});
+
 	return (
 		<Grid container spacing={2}>
 			<Grid item xs={12}>
@@ -30,50 +46,43 @@ const IceConnectionPage: Component = () => {
 					
 				</Section>
 
-				<Show when={clientStore.call?.monitor} fallback={(
-					<div class='flex flex-col bg-white p-4 gap-2 mt-8 mx-4 sm:mx-auto max-w-4xl'>
-						<b>Please join a call to see the ICE connection details.</b>
-					</div>
-				)} keyed>{(monitor) => {
-
-						return (
-							<For each={monitor.peerConnections}>{pc => {
-								console.warn('monitor', pc.iceCandidatePairs());
+				<For each={peerConnections()}>{pc => {
+					console.warn('monitor', pc.iceCandidatePairs());
 								
+					return (
+						<Section title={`PeerConnection (${pc.label})`}>
+							<Show when={pc.getSelectedIceCandidatePair()} keyed>{(selectedPair) => {
 								return (
-									<Section title={`PeerConnection (${pc.label})`}>
-										<Show when={pc.getSelectedIceCandidatePair()} keyed>{(selectedPair) => {
-											return (
-												<>
-													<p>
-														<b>Selected ICE Candidate Pair</b>: {selectedPair.stats.id}
-													</p>
-													<p>
-														<b>State</b>: {selectedPair.stats.state}
-													</p>
-													<p>
-														<b>Network type / address</b>: {selectedPair.getLocalCandidate()?.stats.networkType}
-													</p>
-													<GenericTable data={[
-														{
-															'candidateId': selectedPair.getLocalCandidate()?.stats.id,
-															'Candidate type': getCandidateTypeString(selectedPair.getLocalCandidate()),
-															'address': `${selectedPair.getLocalCandidate()?.stats.address}`,
-															'port': selectedPair.getLocalCandidate()?.stats.port,
-														// networkType: selectedPair.getLocalCandidate()?.stats.,
-														// address: `${selectedPair.getLocalCandidate()?.stats.address}:${selectedPair.getLocalCandidate()?.stats.port}`,
-														// protocol: selectedPair.getLocalCandidate()?.stats.port,
-														// priority: selectedPair.getLocalCandidate()?.stats.priority,
-														// rtt: selectedPair.stats.currentRoundTripTime,
-														},
-														{
-															'candidateId': selectedPair.getRemoteCandidate()?.stats.id,
-															'Candidate type': getCandidateTypeString(selectedPair.getRemoteCandidate()),
-															'address': `${selectedPair.getRemoteCandidate()?.stats.address}`,
-															'port': selectedPair.getRemoteCandidate()?.stats.port,
-														}
-													]} />
-													{/* <div class='flex flex-col bg-white p-4 gap-2'>
+									<>
+										<p>
+											<b>Selected ICE Candidate Pair</b>: {selectedPair.stats.id}
+										</p>
+										<p>
+											<b>State</b>: {selectedPair.stats.state}
+										</p>
+										<p>
+											<b>Network type / address</b>: {selectedPair.getLocalCandidate()?.stats.networkType}
+										</p>
+										<GenericTable data={[
+											{
+												'candidateId': selectedPair.getLocalCandidate()?.stats.id,
+												'Candidate type': getCandidateTypeString(selectedPair.getLocalCandidate()),
+												'address': `${selectedPair.getLocalCandidate()?.stats.address}`,
+												'port': selectedPair.getLocalCandidate()?.stats.port,
+												// networkType: selectedPair.getLocalCandidate()?.stats.,
+												// address: `${selectedPair.getLocalCandidate()?.stats.address}:${selectedPair.getLocalCandidate()?.stats.port}`,
+												// protocol: selectedPair.getLocalCandidate()?.stats.port,
+												// priority: selectedPair.getLocalCandidate()?.stats.priority,
+												// rtt: selectedPair.stats.currentRoundTripTime,
+											},
+											{
+												'candidateId': selectedPair.getRemoteCandidate()?.stats.id,
+												'Candidate type': getCandidateTypeString(selectedPair.getRemoteCandidate()),
+												'address': `${selectedPair.getRemoteCandidate()?.stats.address}`,
+												'port': selectedPair.getRemoteCandidate()?.stats.port,
+											}
+										]} />
+										{/* <div class='flex flex-col bg-white p-4 gap-2'>
 														<p>
 															<b>State</b>: {selectedPair.stats.state}
 														</p>
@@ -94,18 +103,14 @@ const IceConnectionPage: Component = () => {
 														<b>Remote Candidate:</b>
 														{new JSONFormatter(selectedPair.getRemoteCandidate()?.stats).render()}
 													</div> */}
-												</>
-											);}}
-										</Show>
-									</Section>
+									</>
 								);}}
+							</Show>
+						</Section>
+					);}}
 								
 
-							</For>
-						);
-					}}
-						
-				</Show>
+				</For>
 					
 				<Section>
 					<a href="#" class="text-sm text-blue-600 dark:text-blue-500 hover:underline" onClick={() => setPage('main')}>Back</a>
