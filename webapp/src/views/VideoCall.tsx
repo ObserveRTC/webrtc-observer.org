@@ -57,8 +57,8 @@ const VideoCall: Component = () => {
 			<Box title={'Local Client'} full={true}>
 				<div><b>ClientId</b>: {clientStore.call?.config.clientId}</div>
 				<div><b>UserId</b>: {clientStore.userId}</div>
-				<div><b>Inner MediaServer IP</b>: {clientStore.innerServerIp}</div>
-				<div><b>Inner MediaServer IP</b>: {clientStore.call?.monitor.peerConnections[0].usingTURN}</div>
+				{/* <div><b>Inner MediaServer IP</b>: {clientStore.innerServerIp}</div> */}
+				{/* <div><b>Inner MediaServer IP</b>: {clientStore.call?.monitor.peerConnections[0].usingTURN}</div> */}
 				<LocalClientVideo showControls={true} />
 				{/* <ClientMonitorStateProperties /> */}
 			</Box>

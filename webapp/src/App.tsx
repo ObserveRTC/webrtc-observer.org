@@ -29,7 +29,14 @@ const App: Component = () => {
 					<Switch>
 						<Match when={page() === 'main'}><Main/></Match>
 						<Match when={page() === 'stunner'}><StunnerPage /></Match>
-						<Match when={page() === 'ice-connection-page'}><IceConnectionPage /></Match>
+						<Match when={page() === 'ice-connection-page'}>
+							<Show when={clientStore.call?.monitor} fallback={
+								<div class='flex flex-col bg-white p-4 gap-2 mt-8 mx-4 sm:mx-auto max-w-4xl'>
+									<b>Please join a call to see the ICE connection details.</b>
+								</div>
+							} keyed>{(monitor) => (<IceConnectionPage monitor={monitor}/>)}
+							</Show>
+						</Match>
 						<Match when={page() === 'client-monitor-properties'}><ClientMonitorProperties /></Match>
 						<Match when={page() === 'videoCall'}><VideoCall /></Match>
 						<Match when={page() === 'observer'}><ObserverView /></Match>

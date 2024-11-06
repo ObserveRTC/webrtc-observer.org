@@ -4,16 +4,19 @@ import Section from '../components/Section';
 import { setPage } from '../signals/signals';
 import { clientStore } from '../stores/LocalClientStore';
 import GenericTable from '../components/GeneralTable';
-import { LocalCandidateEntry, PeerConnectionEntry, RemoteCandidateEntry } from '@observertc/client-monitor-js';
+import { ClientMonitor, LocalCandidateEntry, PeerConnectionEntry, RemoteCandidateEntry } from '@observertc/client-monitor-js';
 
 // import { setTestState } from '../signals/signals';
 // import Button from '../components/Button';
 
 // const TestResults = lazy(() => import('../components/TestResults'));
 
-const IceConnectionPage: Component = () => {
+type IceConnectionPageProps = {
+	monitor: ClientMonitor;
+};
+
+const IceConnectionPage: Component<IceConnectionPageProps> = (props: IceConnectionPageProps) => {
 	// eslint-disable-next-line no-unused-vars
-	const [ error, setError ] = createSignal<string | undefined>();
 	const [ peerConnections, setPeerConnections ] = createSignal<PeerConnectionEntry[] | undefined>();
 	const [ listener, setListener ] = createSignal<{ func: () => void }>({ func: () => {} });
 	// clientStore.call?.monitor.
@@ -26,12 +29,11 @@ const IceConnectionPage: Component = () => {
 
 	onMount(() => {
 		const func = () => {
-			const peerConnections = clientStore.call?.monitor?.peerConnections;
+			const peerConnections = props.monitor?.peerConnections;
 			peerConnections && setPeerConnections([...peerConnections]);
 		};
 		setListener({ func });
-
-		clientStore.call?.monitor?.on('stats-collected', func);
+		props.monitor?.on('stats-collected', func);
 	});
 
 	onCleanup(() => {
@@ -47,7 +49,6 @@ const IceConnectionPage: Component = () => {
 				</Section>
 
 				<For each={peerConnections()}>{pc => {
-					console.warn('monitor', pc.iceCandidatePairs());
 								
 					return (
 						<Section title={`PeerConnection (${pc.label})`}>
@@ -65,6 +66,7 @@ const IceConnectionPage: Component = () => {
 										</p>
 										<GenericTable data={[
 											{
+												'': 'local',
 												'candidateId': selectedPair.getLocalCandidate()?.stats.id,
 												'Candidate type': getCandidateTypeString(selectedPair.getLocalCandidate()),
 												'address': `${selectedPair.getLocalCandidate()?.stats.address}`,
@@ -76,6 +78,7 @@ const IceConnectionPage: Component = () => {
 												// rtt: selectedPair.stats.currentRoundTripTime,
 											},
 											{
+												'': 'remote',
 												'candidateId': selectedPair.getRemoteCandidate()?.stats.id,
 												'Candidate type': getCandidateTypeString(selectedPair.getRemoteCandidate()),
 												'address': `${selectedPair.getRemoteCandidate()?.stats.address}`,
