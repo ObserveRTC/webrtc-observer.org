@@ -1,0 +1,43 @@
+name: Restart mediaserver pods
+
+on:
+  workflow_dispatch:
+
+env:
+  GKE_CLUSTER: webrtc-observer
+  GKE_ZONE: us-east1-c
+
+jobs:
+  dump-logs:
+    name: Dump k8s status and logs
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Authenticate on GKE
+      id: auth
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: '${{ secrets.GKE_SA_KEY }}'
+
+    - name: Get GKE Credentials
+      id: get-credentials
+      uses: google-github-actions/get-gke-credentials@v2
+      with:
+        cluster_name: ${{ env.GKE_CLUSTER }}
+        location: ${{ env.GKE_ZONE }}
+
+    - name: Get pods
+      run: kubectl get pods -o wide
+
+    - name: Get mediaserver logs
+      run: kubectl logs -l app=mediaserver
+
+    - name: Delete mediaserver pods
+      run: kubectl delete -l app=mediaserver
+
+    - name: Get mediaserver logs again after 2 seconds
+      run: |
+        sleep 2
+        kubectl logs -l app=mediaserver
