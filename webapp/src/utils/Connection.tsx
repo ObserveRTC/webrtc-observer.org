@@ -7,6 +7,7 @@ import { v4 as uuid } from 'uuid';
 import { RtpCapabilities } from 'mediasoup-client/lib/RtpParameters';
 import { 
 	ClientMessage, 
+	GetCallConnectionsResponse, 
 	JoinCallResponsePayload, 
 	NotificationMap, 
 	ObservedGetOngoingCallResponse, 
@@ -191,6 +192,15 @@ export class Connection extends EventEmitter {
 				payload: {},
 			} as ObserverRequest['operation'],
 		}) as Promise<ObservedGetOngoingCallResponse>;
+	}
+
+	public async getCallConnections() {
+		return this._request('observer-request', {
+			operation: {
+				type: 'getCallConnections',
+				payload: {},
+			} as ObserverRequest['operation'],
+		}) as Promise<GetCallConnectionsResponse>;
 	}
 
 	private async _receiveMessage(data: string) {

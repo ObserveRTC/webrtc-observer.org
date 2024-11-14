@@ -1,6 +1,5 @@
 import * as mediasoup from 'mediasoup-client';
 
-
 /* eslint-disable no-unused-vars */
 type UnionizeEvent<T extends object> = {
 	[k in keyof T]: { 
@@ -228,6 +227,15 @@ export type ObservedGetOngoingCallResponse = {
     }[],
 }
 
+export type GetCallConnectionsResponse = {
+    connections: {
+        clientId: string,
+        turnUris: string[],
+        mediaServerIp: string,
+        userId?: string,
+    }[]
+}
+
 export type ObserverRequestTypes = {
     'getOngoingCalls': {
 
@@ -235,6 +243,8 @@ export type ObserverRequestTypes = {
     'getCallStats': {
         callId: string,
     },
+    'getCallConnections': {
+    }
 }
 // ;let's put everything observer related here and we will poll in this example
 // type ObserverOperation = Union
@@ -277,7 +287,8 @@ export type RequestMap = {
     [k in ObserverRequest['type']]: {
         request: ObserverRequest,
         response: ObservedGetOngoingCallResponse | 
-        ObserverGetCallStatsResponse
+        ObserverGetCallStatsResponse | 
+        GetCallConnectionsResponse
     }
 }
 

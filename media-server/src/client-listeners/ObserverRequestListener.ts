@@ -3,24 +3,30 @@ import { ClientContext } from "../common/ClientContext";
 import { createLogger } from "../common/logger";
 import { ClientMessageContext } from "./ClientMessageListener";
 import { 
+	GetCallConnectionsResponse,
 	ObservedGetOngoingCallResponse, 
 	ObserverGetCallStatsResponse, 
 	Response 
 } from "../protocols/MessageProtocol";
+import { HamokService } from "../services/HamokService";
+import { connect } from "http2";
 
 const logger = createLogger('ClientMonitorSampleNotificatinListener');
 
 export type ClientMonitorSampleNotificatinListenerContext = {
 	observer: Observer,
+	hamokService: HamokService,
 }
 
 export function createObserverRequestListener(listenerContext: ClientMonitorSampleNotificatinListenerContext) {
 	const { 
 		observer,
+		hamokService,
 	} = listenerContext;
 	const result = async (messageContext: ClientMessageContext) => {
 		const { 
 			message: request,
+			client,
 		} = messageContext;
 		
 		if (request.type !== 'observer-request') {
@@ -140,6 +146,24 @@ export function createObserverRequestListener(listenerContext: ClientMonitorSamp
 						}
 						reply.clients.push(clientStats);
 					}
+					response = reply;
+				}
+				case 'getCallConnections': {
+					const reply: GetCallConnectionsResponse = {
+						connections: [],
+					}
+					await hamokService.clients.ready;
+					for (const [, callClient] of hamokService.clients.entries()) {
+						if (callClient.callId !== client.callId) continue;
+
+						reply.connections.push({
+							clientId: callClient.clientId,
+							turnUris: callClient.turnUris,
+							mediaServerIp: callClient.mediaServerIp,
+							userId: callClient.userId,
+						});
+					}
+
 					response = reply;
 				}
 			}

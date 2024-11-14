@@ -3,8 +3,8 @@ import { ConnectionConfig } from '../utils/Connection';
 import { v4 as uuid } from 'uuid';
 
 const DEFAULT_PORT = (new URL(window.location.href)).searchParams.get('port') ?? '9080';
-// const SERVER = undefined;
-const SERVER = 'wss://media.webrtc-observer.org:443';
+const SERVER = undefined;
+// const SERVER = 'wss://media.webrtc-observer.org:443';
 
 const forceRelay = window.location.search.includes('forceRelay') ? true : undefined;
 // const forcedRelay = false;

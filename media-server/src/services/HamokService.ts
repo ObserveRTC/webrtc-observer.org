@@ -97,6 +97,8 @@ export type ActiveClient = {
     clientId: string,
     userId: string, 
     routerId: string,
+    turnUris: string[],
+    mediaServerIp: string,
 }
 
 
@@ -307,57 +309,55 @@ export class HamokService extends EventEmitter<HamokServiceEventMap> {
             }).catch(err => logger.error('Failed to join dev hamok', err));
         }
 
-        this.hamok.on('joined', async () => {
-            logger.info('Hamok joined %s', this.eventEmitter.hasSubscribers('create-pipe-transport-request', true));
-            
-            if (!await this.eventEmitter.hasSubscribers('client-sample', true)) {
+        const subscribe = async (event?: keyof HamokEmitterEventMap) => {
+            if (!event || event === 'client-sample') {
                 await this.eventEmitter.subscribe('client-sample', (message) => {
                     this.emit('client-sample', message);
                 });
             }
-            
-            if (!await this.eventEmitter.hasSubscribers('create-pipe-transport-request', true)) {
+
+            if (!event || event === 'create-pipe-transport-request') {
                 await this.eventEmitter.subscribe('create-pipe-transport-request', (requestId, payload) => {
                     this.emit('create-pipe-transport-request', payload, createNonVoidResponseCallback(requestId));
                 });
             }
-    
-            if (!await this.eventEmitter.hasSubscribers('connect-pipe-transport-request', true)) {
+
+            if (!event || event === 'connect-pipe-transport-request') {
                 await this.eventEmitter.subscribe('connect-pipe-transport-request', (requestId, payload) => {
                     this.emit('connect-pipe-transport-request', payload, createVoidResponseCallback(requestId));
                 });
             }
-    
-            if (!await this.eventEmitter.hasSubscribers('pipe-media-producer-to', true)) {
+
+            if (!event || event === 'pipe-media-producer-to') {
                 await this.eventEmitter.subscribe('pipe-media-producer-to', (requestId, payload) => {
                     this.emit('pipe-media-producer-to', payload, createNonVoidResponseCallback(requestId));
                 });
             }
-    
-            if (!await this.eventEmitter.hasSubscribers('get-client-producers-request', true)) {
+
+            if (!event || event === 'get-client-producers-request') {
                 await this.eventEmitter.subscribe('get-client-producers-request', (requestId, payload) => {
                     this.emit('get-client-producers-request', payload, createNonVoidResponseCallback(requestId));
                 });
             }
-    
-            if (!await this.eventEmitter.hasSubscribers('consume-media-producer', true)) {
+
+            if (!event || event === 'consume-media-producer') {
                 await this.eventEmitter.subscribe('consume-media-producer', (payload) => {
                     this.emit('consume-media-producer', payload);
                 });
             }
-    
-            if (!await this.eventEmitter.hasSubscribers('piped-media-consumer-closed', true)) {
+
+            if (!event || event === 'piped-media-consumer-closed') {
                 await this.eventEmitter.subscribe('piped-media-consumer-closed', (payload) => {
                     this.emit('piped-media-consumer-closed', payload);
                 });
             }
-    
-            if (!await this.eventEmitter.hasSubscribers('response', true)) {
+
+            if (!event || event === 'response') {
                 await this.eventEmitter.subscribe('response', (requestId, response) => {
                     const pendingRequest = this._pendingRequests.get(requestId);
-    
+        
                     if (!pendingRequest) return;
-    
+        
                     clearTimeout(pendingRequest.timer);
                     if (response.error) {
                         pendingRequest.reject(response.error);
@@ -365,7 +365,26 @@ export class HamokService extends EventEmitter<HamokServiceEventMap> {
                         pendingRequest.resolve(response.payload);
                     }
                 });
-            }            
+            }
+        }
+
+        this.eventEmitter.subscriptions.on('removed', (event, peerId) => {
+            if (peerId !== this.hamok.localPeerId) return;
+            
+            const forcedSubscribe = () => {
+                subscribe(event).catch(err => {
+                    logger.error('Failed to subscribe to %s: %o', event, err);
+                    forcedSubscribe();  
+                })    
+            }
+
+            forcedSubscribe();
+        })
+
+        this.hamok.on('joined', async () => {
+            logger.info('Hamok joined %s', this.eventEmitter.hasSubscribers('create-pipe-transport-request', true));
+            
+             await subscribe();     
         });
 
 		await this.hamok.join({

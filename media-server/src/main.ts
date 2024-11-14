@@ -95,6 +95,7 @@ server.messageListeners
     .set('observer-request', 
         createObserverRequestListener({
             observer,
+            hamokService,
         })
     )
     ;

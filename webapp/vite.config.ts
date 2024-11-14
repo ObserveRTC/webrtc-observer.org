@@ -8,5 +8,14 @@ export default defineConfig({
 		outDir: 'build',
 		target: 'esnext' 
 	},
-	// optimizeDeps: { exclude: ['fsevents'] },
+	optimizeDeps: { 
+		exclude: [
+			'fsevents',
+			'@observertc/client-monitor-js'
+		] 
+	},
+	// https://vitejs.dev/config/
+	// optimizeDeps: {
+	// 	exclude: ['@observertc/client-monitor-js']
+	// },
 });

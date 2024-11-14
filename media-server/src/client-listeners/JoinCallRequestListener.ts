@@ -105,6 +105,8 @@ export function createJoinCallRequestListener(listenerContext: JoinCallRequestLi
 						roomId: client.roomId,
 						routerId: router.id,
 						userId: client.userId,
+						turnUris: turnConfig ? turnConfig.uris : [],
+						mediaServerIp: mediasoupService.announcedAddress,
 					})
 
 					response = {
