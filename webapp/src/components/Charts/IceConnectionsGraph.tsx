@@ -9,7 +9,7 @@ export function IceConnectionsGraph(props: IceConnectionsGraphProps) {
 	// eslint-disable-next-line solid/reactivity
 	const mediaServerNodes = [...new Set<string>(props.connections.map(c => c.mediaServerIp))].map((ip, i) => ({
 		name: ip,
-		x: 400,
+		x: 600,
 		y: 150 + i * 100
 	}));
 	const clientNodes = props.connections.map((c, i) => ({
@@ -17,18 +17,36 @@ export function IceConnectionsGraph(props: IceConnectionsGraphProps) {
 		x: 200,
 		y: 100 + i * 100
 	}));
-	const links = props.connections.map((c) => ({
-		source: c.userId ?? c.clientId,
-		target: c.mediaServerIp,
-		symbolSize: [5, 20],
-		// label: {
-		// 	show: true
-		// },
-		lineStyle: {
-			width: 5,
-			curveness: 0.2
-		}
-	}));
+	const turnNodes = [{
+		name: 'STUNner',
+		x: 400,
+		y: 250,
+	}];
+	const links = [
+		...props.connections.map((c) => ({
+			source: c.userId ?? c.clientId,
+			target: c.mediaServerIp,
+			symbolSize: [5, 20],
+			// label: {
+			// 	show: true
+			// },
+			lineStyle: {
+				width: 5,
+				curveness: 0.2,
+				type: 'dashed',
+			}
+		})),
+		...props.connections.map((c) => ({
+			source: c.userId ?? c.clientId,
+			target: 'STUNner',
+			symbolSize: [5, 20],
+		})),
+		...props.connections.map((c) => ({
+			source: 'STUNner',
+			target: c.mediaServerIp,
+			symbolSize: [5, 20],
+		})),
+	];
 	// console.warn('mediaServerNodes', mediaServerNodes, clientNodes);
 	return (
 		<div class='h-64'>
@@ -56,15 +74,18 @@ export function IceConnectionsGraph(props: IceConnectionsGraphProps) {
 						data: [
 							...mediaServerNodes,
 							...clientNodes,
+							...turnNodes,
 						],
 						links,
 						// links: [
 						// 	{
 						// 		source: 'Node 0',
 						// 		target: 'Node 1',
-								
+						// 		lineStyle: {
+						// 			type: 'dashed',
+						// 		}
 						// 	}
-						// ]
+						// ],
 						// links: [
 						// 	{
 						// 		source: 0,
