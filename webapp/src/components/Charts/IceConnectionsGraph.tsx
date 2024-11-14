@@ -15,7 +15,10 @@ export function IceConnectionsGraph(props: IceConnectionsGraphProps) {
 	const clientNodes = props.connections.map((c, i) => ({
 		name: c.userId ?? c.clientId,
 		x: 200,
-		y: 100 + i * 100
+		y: 100 + i * 100,
+		// itemStyle: {
+		// 	color: 'red'
+		// }
 	}));
 	const turnNodes = [{
 		name: 'STUNner',

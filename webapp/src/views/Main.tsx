@@ -1,8 +1,11 @@
-import { Show, createSignal, type Component } from 'solid-js';
+import { Show, createSignal, onCleanup, onMount, type Component } from 'solid-js';
 import { ErrorPaperItem } from '../components/PaperItem';
 import { Grid } from '@suid/material';
 import Section from '../components/Section';
 import { setPage } from '../signals/signals';
+import { clientStore } from '../stores/LocalClientStore';
+import { GetCallConnectionsResponse } from '../utils/MessageProtocol';
+import { IceConnectionsGraph } from '../components/Charts/IceConnectionsGraph';
 
 // import { setTestState } from '../signals/signals';
 // import Button from '../components/Button';
@@ -12,7 +15,25 @@ import { setPage } from '../signals/signals';
 const Main: Component = () => {
 	// eslint-disable-next-line no-unused-vars
 	const [ error, setError ] = createSignal<string | undefined>();
+	const [ timer, setTimer ] = createSignal<ReturnType<typeof setInterval> | undefined>();
+	const [ connections, setConnections ] = createSignal<GetCallConnectionsResponse | undefined>();
 
+	onMount(() => {
+		setTimer(setInterval(async () => {
+			if (!clientStore.call) return;
+			const response = await clientStore.call.getCallConnections();
+			if (response.connections.length < 1) return;
+			if (connections()?.connections.length === response.connections.length) return;
+			// console.warn('connections', response);
+			setConnections(response);
+		}, 1000));
+		
+	});
+
+	onCleanup(() => {
+		clearInterval(timer());
+	});
+	
 	return (
 		<Grid container spacing={2}>
 			<Show when={error()}>
@@ -34,6 +55,12 @@ const Main: Component = () => {
 					<p class='text-left text-base font-sans text-gray-600 antialiased text-justify'>
                         STUNner is an open-source project designed to facilitate the deployment of WebRTC services within Kubernetes environments. It acts as a media gateway that provides standards-compliant STUN/TURN functionalities to ingest real-time media into a Kubernetes cluster, enabling a seamless integration of WebRTC services into the cloud-native ecosystem.
 					</p>
+					<Show when={connections()} keyed>{(connections) => {
+						return (
+							<IceConnectionsGraph connections={connections.connections} />
+						);
+					}}
+					</Show>
 					<a href="#" class="text-sm text-blue-600 dark:text-blue-500 hover:underline" onClick={() => setPage('ice-connection-page')}>
                         See ICE connection
 					</a>

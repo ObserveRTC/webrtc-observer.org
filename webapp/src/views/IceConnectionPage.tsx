@@ -5,8 +5,6 @@ import { setPage } from '../signals/signals';
 import { clientStore } from '../stores/LocalClientStore';
 import GenericTable from '../components/GeneralTable';
 import { ClientMonitor, LocalCandidateEntry, PeerConnectionEntry, RemoteCandidateEntry } from '@observertc/client-monitor-js';
-import { GetCallConnectionsResponse } from '../utils/MessageProtocol';
-import { IceConnectionsGraph } from '../components/Charts/IceConnectionsGraph';
 
 // import { setTestState } from '../signals/signals';
 // import Button from '../components/Button';
@@ -28,8 +26,6 @@ const IceConnectionPage: Component<IceConnectionPageProps> = (props: IceConnecti
 			return `relay (${candidateType.stats.protocol}) ${candidateType.stats.url}`;
 		}
 	};
-	const [ timer, setTimer ] = createSignal<ReturnType<typeof setInterval> | undefined>();
-	const [ connections, setConnections ] = createSignal<GetCallConnectionsResponse | undefined>();
 
 	onMount(() => {
 		const func = () => {
@@ -38,35 +34,15 @@ const IceConnectionPage: Component<IceConnectionPageProps> = (props: IceConnecti
 		};
 		setListener({ func });
 		props.monitor?.on('stats-collected', func);
-
-		setTimer(setInterval(async () => {
-			if (!clientStore.call) return;
-			const response = await clientStore.call.getCallConnections();
-			if (response.connections.length < 1) return;
-			if (connections()?.connections.length === response.connections.length) return;
-			// console.warn('connections', response);
-			setConnections(response);
-		}, 1000));
-		
 	});
 
 	onCleanup(() => {
 		clientStore.call?.monitor?.off('stats-collected', listener().func);
-		clearInterval(timer());
 	});
 
 	return (
 		<Grid container spacing={2}>
 			<Grid item xs={12}>
-				<Section title="ICE Connection">
-					<Show when={connections()} keyed>{(connections) => {
-						return (
-							<IceConnectionsGraph connections={connections.connections}  />
-						);
-					}}
-					</Show>
-				</Section>
-				
 				<For each={peerConnections()}>{pc => {
 								
 					return (
