@@ -8,8 +8,8 @@ env:
   GKE_ZONE: us-east1-c
 
 jobs:
-  dump-logs:
-    name: Dump k8s status and logs
+  restart-mediaserver-pods:
+    name: Restart mediaserver pods
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
@@ -35,7 +35,7 @@ jobs:
       run: kubectl logs -l app=mediaserver
 
     - name: Delete mediaserver pods
-      run: kubectl delete -l app=mediaserver
+      run: kubectl delete pod -l app=mediaserver
 
     - name: Get mediaserver logs again after 2 seconds
       run: |
