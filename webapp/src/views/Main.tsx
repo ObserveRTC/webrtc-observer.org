@@ -20,12 +20,15 @@ const Main: Component = () => {
 
 	onMount(() => {
 		setTimer(setInterval(async () => {
+			console.log(await clientStore.call?.getHamokState());
+
 			if (!clientStore.call) return;
 			const response = await clientStore.call.getCallConnections();
 			if (response.connections.length < 1) return;
 			if (connections()?.connections.length === response.connections.length) return;
 			// console.warn('connections', response);
 			setConnections(response);
+
 		}, 1000));
 		
 	});

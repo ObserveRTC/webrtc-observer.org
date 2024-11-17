@@ -147,6 +147,7 @@ export function createObserverRequestListener(listenerContext: ClientMonitorSamp
 						reply.clients.push(clientStats);
 					}
 					response = reply;
+					break;
 				}
 				case 'getCallConnections': {
 					const reply: GetCallConnectionsResponse = {
@@ -165,9 +166,11 @@ export function createObserverRequestListener(listenerContext: ClientMonitorSamp
 					}
 
 					response = reply;
+					break;
 				}
 				case 'getHamokState': {
 					response = hamokService.getStats();
+					break;
 				}
 			}
 		} catch (err) {

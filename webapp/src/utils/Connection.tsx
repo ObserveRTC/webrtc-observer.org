@@ -185,6 +185,15 @@ export class Connection extends EventEmitter {
 		}) as Promise<ObserverGetCallStatsResponse>;
 	}
 
+	public async getHamokState() {
+		return this._request('observer-request', {
+			operation: {
+				type: 'getHamokState',
+				payload: {},
+			} as ObserverRequest['operation'],
+		}) as Promise<unknown>;
+	}
+
 	public async getOngoingCalls() {
 		return this._request('observer-request', {
 			operation: {

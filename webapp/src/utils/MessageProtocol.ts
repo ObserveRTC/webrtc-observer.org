@@ -244,7 +244,10 @@ export type ObserverRequestTypes = {
         callId: string,
     },
     'getCallConnections': {
-    }
+    },
+    'getHamokState': {
+
+    },
 }
 // ;let's put everything observer related here and we will poll in this example
 // type ObserverOperation = Union
