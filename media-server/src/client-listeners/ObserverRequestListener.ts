@@ -166,6 +166,9 @@ export function createObserverRequestListener(listenerContext: ClientMonitorSamp
 
 					response = reply;
 				}
+				case 'getHamokState': {
+					response = hamokService.getStats();
+				}
 			}
 		} catch (err) {
 			response = undefined;

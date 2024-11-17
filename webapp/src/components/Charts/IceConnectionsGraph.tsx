@@ -19,6 +19,7 @@ export function IceConnectionsGraph(props: IceConnectionsGraphProps) {
 		// itemStyle: {
 		// 	color: 'red'
 		// }
+		
 	}));
 	const turnNodes = [{
 		name: 'STUNner',
@@ -37,7 +38,7 @@ export function IceConnectionsGraph(props: IceConnectionsGraphProps) {
 				width: 5,
 				curveness: 0.2,
 				type: 'dashed',
-			}
+			},
 		})),
 		...props.connections.map((c) => ({
 			source: c.userId ?? c.clientId,

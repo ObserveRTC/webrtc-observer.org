@@ -139,6 +139,7 @@ export class HamokService extends EventEmitter<HamokServiceEventMap> {
     private _redisConnected = false;
     private readonly _channel: HamokRedisMessageChannel;
     private _devHamok?: Hamok<HamokAppData>;
+    private _redisState: 'connecting' | 'connected' | 'disconnected' | 'error' = 'disconnected';
 
     constructor(
         config: HamokServiceConfig
@@ -275,6 +276,31 @@ export class HamokService extends EventEmitter<HamokServiceEventMap> {
         this.emit('call-inserted-by-this-instance', newCall);
 
         return newCall;
+    }
+
+    public getStats() {
+        
+        return {
+            remotePeerIds: this.hamok.remotePeerIds,
+            localPeerId: this.hamok.localPeerId,
+            leader: this.hamok.raft.leaderId,
+            state: this.hamok.raft.state,
+            stats: this.hamok.stats,
+            redisConnected: this._redisConnected,
+            redisState: this._redisState,
+            emitter: {
+                id: this.eventEmitter.id,
+                subscriptionAllPeerIds: [...this.eventEmitter.subscriptions.getAllPeerIds()],
+                'create-pipe-transport-request': [...(this.eventEmitter.subscriptions.getEventPeersMap('create-pipe-transport-request') ?? [])],
+                'connect-pipe-transport-request': [...(this.eventEmitter.subscriptions.getEventPeersMap('connect-pipe-transport-request') ?? [])],
+                'pipe-media-producer-to': [...(this.eventEmitter.subscriptions.getEventPeersMap('pipe-media-producer-to') ?? [])],
+                'consume-media-producer': [...(this.eventEmitter.subscriptions.getEventPeersMap('consume-media-producer') ?? [])],
+                'get-client-producers-request': [...(this.eventEmitter.subscriptions.getEventPeersMap('get-client-producers-request') ?? [])],
+                'piped-media-consumer-closed': [...(this.eventEmitter.subscriptions.getEventPeersMap('piped-media-consumer-closed') ?? [])],
+                'client-sample': [...(this.eventEmitter.subscriptions.getEventPeersMap('client-sample') ?? [])],
+                'response': [...(this.eventEmitter.subscriptions.getEventPeersMap('response') ?? [])],
+            },
+        }
     }
 
 
@@ -480,9 +506,11 @@ export class HamokService extends EventEmitter<HamokServiceEventMap> {
 
         }();
 
+        this._redisState = 'connecting';
+
 		redisPublisher.on('reconnecting', () => logger.warn('Reconnecting'));
 		redisPublisher.on('ready', () => logger.info('Ready'));
-		redisPublisher.on('end', () => logger.warn('Connection closed (ended)'));
+		redisPublisher.on('end', () => (logger.warn('Connection closed (ended)'), this._redisState = 'disconnected'));
 		redisSubscriber.on('error', (err) => logger.error('Error occurred', err));
 		redisSubscriber.on('connect', () => void 0);
 		redisSubscriber.on('reconnecting', () => void 0);
@@ -500,6 +528,8 @@ export class HamokService extends EventEmitter<HamokServiceEventMap> {
 			} else {
 				logger.warn('Error occurred', err);
 			}
+
+            this._redisState = 'error';
 		});
 		redisPublisher.on('connect', () => {
 			if (this._redisConnected) {
@@ -521,6 +551,8 @@ export class HamokService extends EventEmitter<HamokServiceEventMap> {
                 channel.close();
             });
 			logger.info('Connected');
+
+            this._redisState = 'connected';
 		});
 
         redisSubscriber.on('messageBuffer', (redisChannel, data) => {
