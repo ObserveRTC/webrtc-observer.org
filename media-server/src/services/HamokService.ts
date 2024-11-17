@@ -140,6 +140,7 @@ export class HamokService extends EventEmitter<HamokServiceEventMap> {
     private readonly _channel: HamokRedisMessageChannel;
     private _devHamok?: Hamok<HamokAppData>;
     private _redisState: 'connecting' | 'connected' | 'disconnected' | 'error' = 'disconnected';
+    private readonly _stateLogs: string[] = [];
 
     constructor(
         config: HamokServiceConfig
@@ -281,13 +282,14 @@ export class HamokService extends EventEmitter<HamokServiceEventMap> {
     public getStats() {
         
         return {
-            remotePeerIds: this.hamok.remotePeerIds,
+            remotePeerIds: [...this.hamok.remotePeerIds],
             localPeerId: this.hamok.localPeerId,
             leader: this.hamok.raft.leaderId,
             state: this.hamok.raft.state,
             stats: this.hamok.stats,
             redisConnected: this._redisConnected,
             redisState: this._redisState,
+            stateLogs: this._stateLogs,
             emitter: {
                 id: this.eventEmitter.id,
                 subscriptionAllPeerIds: [...this.eventEmitter.subscriptions.getAllPeerIds()],
@@ -337,6 +339,8 @@ export class HamokService extends EventEmitter<HamokServiceEventMap> {
 
         this.hamok.on('joined', async () => {
             logger.info('Hamok joined %s', this.eventEmitter.hasSubscribers('create-pipe-transport-request', true));
+
+            this._stateLogs.push('Hamok Joined');
         });
 
 		await this.hamok.join({
@@ -347,9 +351,11 @@ export class HamokService extends EventEmitter<HamokServiceEventMap> {
         this.eventEmitter.subscriptions
             .on('added', (event, peerId, metaData) => {
                 logger.debug(`Peer ${peerId} subscribed to ${event} with metadata: %o`, metaData);
+                this._stateLogs.push(`Peer ${peerId} subscribed to ${event} with metadata: ${JSON.stringify(metaData)}`);
             })
             .on('removed', (event, peerId) => {
                 logger.debug(`Peer ${peerId} unsubscribed from ${event}`);
+                this._stateLogs.push(`Peer ${peerId} unsubscribed from ${event}`);
             })
             ;
 
@@ -357,6 +363,7 @@ export class HamokService extends EventEmitter<HamokServiceEventMap> {
         await this.eventEmitter.subscribe('client-sample', (message) => {
             this.emit('client-sample', message);
         });
+        this._stateLogs.push('Subscribed to client-sample');
 
         await this.eventEmitter.subscribe('create-pipe-transport-request', (requestId, payload) => {
             this.emit('create-pipe-transport-request', payload, createNonVoidResponseCallback(requestId));
@@ -394,6 +401,7 @@ export class HamokService extends EventEmitter<HamokServiceEventMap> {
                 pendingRequest.resolve(response.payload);
             }
         });
+        this._stateLogs.push('Subscribed to all events');
     
 
         const createNonVoidResponseCallback = <T extends object>(requestId: string): HamokServiceResponseField<T> => ((payload?: T, error?: string) => {
@@ -538,10 +546,12 @@ export class HamokService extends EventEmitter<HamokServiceEventMap> {
 
     private _remotePeerJoined(peerId: string) {
 		logger.info('Remote peer joined: %s', peerId);
+        this._stateLogs.push(`Remote peer joined: ${peerId}`);
 	}
 
 	private _remotePeerLeft(peerId: string) {
 		logger.info('Remote peer left: %s', peerId);
+        this._stateLogs.push(`Remote peer left: ${peerId}`);
 		
 		if (this.hamok.leader) {
             // if this node is the leader and another peer left, maybe we need to do something with some stuffs?
