@@ -342,6 +342,8 @@ export class HamokService extends EventEmitter<HamokServiceEventMap> {
 
             this._stateLogs.push('Hamok Joined');
         });
+        this.hamok.on('rejoining', () => this._stateLogs.push('Hamok Rejoining'));
+        this.hamok.on('no-heartbeat-from', (peerId) => this._stateLogs.push(`No heartbeat from ${peerId}`));
 
 		await this.hamok.join({
 			fetchRemotePeerTimeoutInMs: 2000,
@@ -363,7 +365,6 @@ export class HamokService extends EventEmitter<HamokServiceEventMap> {
         await this.eventEmitter.subscribe('client-sample', (message) => {
             this.emit('client-sample', message);
         });
-        this._stateLogs.push('Subscribed to client-sample');
 
         await this.eventEmitter.subscribe('create-pipe-transport-request', (requestId, payload) => {
             this.emit('create-pipe-transport-request', payload, createNonVoidResponseCallback(requestId));
@@ -559,6 +560,7 @@ export class HamokService extends EventEmitter<HamokServiceEventMap> {
 	}
 
 	private async _leaderChanged(leaderId: string | undefined) {
+        this._stateLogs.push(`Leader changed to: ${leaderId}`);
 		if (leaderId !== this.hamok.localPeerId) {
 			return;
 		}
