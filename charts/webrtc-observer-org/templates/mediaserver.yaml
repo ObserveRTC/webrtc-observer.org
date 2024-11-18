@@ -96,6 +96,7 @@ data:
         mapId: "webrtc-observer-clients-map"
       eventEmitter:
         emitterId: "webrtc-observer-media-service-events"
+        autoClean: true
       roomsMap:
         mapId: "webrtc-observer-rooms-map"
       redis:
