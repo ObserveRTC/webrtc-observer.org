@@ -727,7 +727,7 @@ h264-profile-level-id@^2.0.0:
     "@types/debug" "^4.1.12"
     debug "^4.3.4"
 
-hamok@^2.6.1-ccb38aa.0:
+hamok@^2.6.1-cfdc615.0:
   version "2.6.1-fee52c2.0"
   resolved "https://registry.yarnpkg.com/hamok/-/hamok-2.6.1-fee52c2.0.tgz#44e1fa9b5ca8f4626c6d40aef9f4357b1b56d94e"
   integrity sha512-XBAZUyycHPqsmkimCR1Jz1fbnH0D1PYXWqS7Icl4eB8Rue6hf8dO50Ga1Hhl7cKmSlOwfaLVQ7GfpVJOHSU7dQ==
