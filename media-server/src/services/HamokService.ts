@@ -361,7 +361,11 @@ export class HamokService extends EventEmitter<HamokServiceEventMap> {
             })
             ;
 
-
+        (this.eventEmitter.subscriptions as any).on('debug', (message: string) => {
+            logger.debug(message);
+            this._stateLogs.push(message);
+        });
+        
         await this.eventEmitter.subscribe('client-sample', (message) => {
             this.emit('client-sample', message);
         });
