@@ -64,6 +64,9 @@ export function createCreateTransportRequestListener(listenerContext: CreateTran
 					if (webRtcServer) {
 						transportOptions = {
 							webRtcServer,
+							appData: {
+								webrtcTransport: true,
+							}
 						};
 
 						// also the ice candidate should be fetched here
@@ -75,6 +78,9 @@ export function createCreateTransportRequestListener(listenerContext: CreateTran
 								ip: server.config.serverIp,
 								announcedIp: server.config.announcedIp,
 							}],
+							appData: {
+								webrtcTransport: true,
+							}
 						};
 					}
 					

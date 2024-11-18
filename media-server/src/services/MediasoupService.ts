@@ -424,8 +424,8 @@ export class MediasoupService extends EventEmitter<MediasoupServiceEventMap> {
 		return localPipeTransport;
 	}
 
-	private _addTransport = (router: mediasoup.types.Router<RouterAppData>, transport: mediasoup.types.Transport) => {
-		if (transport.constructor.name !== 'WebRtcTransport') {
+	private _addTransport = (router: mediasoup.types.Router<RouterAppData>, transport: mediasoup.types.Transport<{ webrtcTransport?: boolean}>) => {
+		if (!transport.appData?.webrtcTransport) {
 			// at the moment we only add webrtc transport
 			return;
 		}
@@ -490,7 +490,7 @@ export class MediasoupService extends EventEmitter<MediasoupServiceEventMap> {
 		router.appData.mediaConsumers.set(consumer.id, consumer);
 		this.mediaConsumers.set(consumer.id, consumer);
 
-		if (transport.constructor.name === 'WebRtcTransport') {
+		if (transport.appData?.webrtcTransport) {
 			this.emit('new-webrtc-media-consumer', consumer);
 		}
 		logger.info(`Consumer ${consumer.id} created on transport ${transport.id} on router ${router.id}`);

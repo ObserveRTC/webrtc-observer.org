@@ -48,7 +48,6 @@ export function createConsumeMediaProducerListener(listenerContext: ConsumeMedia
 				mediaProducer = mediasoupService.mediaProducers.get(mediaProducerId);
 			}
 
-
 			if (!mediaProducer) {
 				return logger.warn(`Media producer ${mediaProducerId} not found in mediasoupService`);
 			}
