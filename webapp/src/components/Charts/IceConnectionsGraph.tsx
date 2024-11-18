@@ -38,17 +38,24 @@ export function IceConnectionsGraph(props: IceConnectionsGraphProps) {
 				width: 5,
 				curveness: 0.2,
 				type: 'dashed',
+				color: '#c0c0c0',
 			},
 		})),
 		...props.connections.map((c) => ({
 			source: c.userId ?? c.clientId,
 			target: 'STUNner',
 			symbolSize: [5, 20],
+			lineStyle: {
+				color: '#696969',
+			},
 		})),
 		...props.connections.map((c) => ({
 			source: 'STUNner',
 			target: c.mediaServerIp,
 			symbolSize: [5, 20],
+			lineStyle: {
+				color: '#696969',
+			},
 		})),
 	];
 	// console.warn('mediaServerNodes', mediaServerNodes, clientNodes);
@@ -87,6 +94,7 @@ export function IceConnectionsGraph(props: IceConnectionsGraphProps) {
 						// 		target: 'Node 1',
 						// 		lineStyle: {
 						// 			type: 'dashed',
+						// 			color: '#696969',
 						// 		}
 						// 	}
 						// ],

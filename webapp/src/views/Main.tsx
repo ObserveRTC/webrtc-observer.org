@@ -20,7 +20,7 @@ const Main: Component = () => {
 
 	onMount(() => {
 		setTimer(setInterval(async () => {
-			console.log(await clientStore.call?.getHamokState());
+			// console.log(await clientStore.call?.getHamokState());
 
 			if (!clientStore.call) return;
 			const response = await clientStore.call.getCallConnections();
