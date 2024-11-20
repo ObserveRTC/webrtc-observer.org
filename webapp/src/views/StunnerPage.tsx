@@ -2,6 +2,7 @@ import { createSignal, type Component } from 'solid-js';
 import { Grid } from '@suid/material';
 import Section from '../components/Section';
 import { setPage } from '../signals/signals';
+import { clientStore } from '../stores/LocalClientStore';
 
 // import { setTestState } from '../signals/signals';
 // import Button from '../components/Button';
@@ -24,8 +25,12 @@ const StunnerPage: Component = () => {
 				STUNner exposes various statistics in an external time-series database like Prometheus. This way, one can observe the state of the STUNner media gateway instances, such as CPU or memory use or the amount of data received and sent in quasi-real-time. Below, we present a Grafana dashboard showing some of the key STUNner performance metrics.
 				</p>
 
-				<iframe src="https://www.webrtc-observer.org/g/public-dashboards/c3f4bd864c094ad49396aab48a9aea09?from=now-5m&to=now&timezone=browser&theme=light" title="STUNner Metrics" height="480"></iframe>
 
+				<Show when={clientStore.call} fallback={(
+				 <b>Please join a call to see the ClientMonitor in action.</b>
+				)}>
+				<iframe src="https://www.webrtc-observer.org/g/public-dashboards/c3f4bd864c094ad49396aab48a9aea09?from=now-5m&to=now&timezone=browser&theme=light" title="STUNner Metrics" height="480"></iframe>
+				</Show>
 				</Section>
 
 				<Section>
