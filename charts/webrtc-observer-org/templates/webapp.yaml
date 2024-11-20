@@ -80,14 +80,13 @@ spec:
               name: webapp
               port:
                 number: 80
-        - backend:
-          service:
-            name: grafana-external
-            port:
-              number: 80
-          path: /g
+        - path: /g
           pathType: Prefix
-
+          backend:
+            service:
+              name: grafana-external
+              port:
+                number: 80
     - host: {{ .Values.mediadomain }}
       http:
         paths:
