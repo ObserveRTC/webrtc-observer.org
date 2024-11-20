@@ -20,7 +20,7 @@ const StunnerPage: Component = () => {
 				More about STUNner...
 
 				STUNner metrics
-				<iframe src="https://www.webrtc-observer.org/g/public-dashboards/c3f4bd864c094ad49396aab48a9aea09?from=now-5m&to=now&timezone=browser" title="STUNner Metrics"></iframe>
+				<iframe src="https://www.webrtc-observer.org/g/public-dashboards/c3f4bd864c094ad49396aab48a9aea09?from=now-5m&to=now&timezone=browser&theme=light" title="STUNner Metrics" height="480"></iframe>
 
 				</Section>
 
