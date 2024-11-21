@@ -10,15 +10,18 @@ export function IceConnectionsGraph(props: IceConnectionsGraphProps) {
 	const mediaServerNodes = [...new Set<string>(props.connections.map(c => c.mediaServerIp))].map((ip, i) => ({
 		name: ip,
 		x: 600,
-		y: 150 + i * 100
+		y: 150 + i * 100,
+		itemStyle: {
+			color: '#40E0D0'
+		}
 	}));
 	const clientNodes = props.connections.map((c, i) => ({
 		name: c.userId ?? c.clientId,
 		x: 200,
 		y: 100 + i * 100,
-		// itemStyle: {
-		// 	color: 'red'
-		// }
+		itemStyle: {
+			color: '#007FFF'
+		}
 		
 	}));
 	const turnNodes = [{
@@ -38,23 +41,23 @@ export function IceConnectionsGraph(props: IceConnectionsGraphProps) {
 				width: 5,
 				curveness: 0.2,
 				type: 'dashed',
-				color: '#c0c0c0',
+				color: '#d0d0d0',
 			},
 		})),
 		...props.connections.map((c) => ({
 			source: c.userId ?? c.clientId,
 			target: 'STUNner',
-			symbolSize: [5, 20],
+			symbolSize: [5, 10],
 			lineStyle: {
-				color: '#696969',
+				color: '#031273',
 			},
 		})),
 		...props.connections.map((c) => ({
 			source: 'STUNner',
 			target: c.mediaServerIp,
-			symbolSize: [5, 20],
+			symbolSize: [5, 10],
 			lineStyle: {
-				color: '#696969',
+				color: '#031273',
 			},
 		})),
 	];
@@ -68,6 +71,12 @@ export function IceConnectionsGraph(props: IceConnectionsGraphProps) {
 				tooltip: {},
 				animationDurationUpdate: 1500,
 				animationEasingUpdate: 'quinticInOut',
+				// legend: [
+				// 	{
+				// 		// selectedMode: 'single',
+				// 		data: ['STUNner', 'Media Server', 'Client']
+				// 	}
+				// ],
 				series: [
 					{
 						type: 'graph',
@@ -82,6 +91,17 @@ export function IceConnectionsGraph(props: IceConnectionsGraphProps) {
 						edgeLabel: {
 							fontSize: 20
 						},
+						// categories: [
+						// 	{
+						// 		name: 'Media Server'
+						// 	},
+						// 	{
+						// 		name: 'Client'
+						// 	},
+						// 	{
+						// 		name: 'STUNner'
+						// 	}
+						// ],
 						data: [
 							...mediaServerNodes,
 							...clientNodes,
