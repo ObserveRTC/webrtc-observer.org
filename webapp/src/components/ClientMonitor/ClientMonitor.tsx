@@ -30,7 +30,7 @@ const ClientMonitor: Component = () => {
 				return (
 					<>
 						<p class='text-left text-base font-sans text-gray-600 antialiased text-justify'>
-							An instance of the ClientMonitor class has the following properties: (<b>UNDER DEVELOPMENT</b>)
+							An instance of the ClientMonitor class has the following properties: 
 						</p>
 						<ShowObject 
 							{...createClientMonitorProps(m)}

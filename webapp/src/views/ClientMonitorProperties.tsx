@@ -20,15 +20,6 @@ const ClientMonitorProperties: Component = () => {
 		<Grid container spacing={2}>
 			<Grid item xs={12}>
 				<Section title={'ClientMonitor'}>
-					<p class='text-left text-base font-sans text-gray-600 antialiased text-justify'>
-				The ClientMonitor class from 
-						<a href="https://www.npmjs.com/package/@observertc/client-monitor-js" >ObserveRTC’s @observertc/client-monitor-js</a>  library is designed to monitor and gather WebRTC statistics and 
-				performance metrics from client applications. It serves as a comprehensive 
-				tool for tracking the health, efficiency, and performance of WebRTC connections, 
-				allowing developers to capture real-time information and diagnostics about WebRTC 
-				sessions in their applications.
-					</p>
-
 					<Show when={clientStore.call} fallback={(
 						<b>Please join a call to see the ClientMonitor in action.</b>
 					)}>

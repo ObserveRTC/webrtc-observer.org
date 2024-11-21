@@ -73,6 +73,14 @@ const Main: Component = () => {
 				</Section>
 
 				<Section title="ClientMonitor" subsection={true}>
+					<p class='text-left text-base font-sans text-gray-600 antialiased text-justify'>
+						The ClientMonitor class from 
+						<a href="https://www.npmjs.com/package/@observertc/client-monitor-js" >ObserveRTC’s @observertc/client-monitor-js</a>  library is designed to monitor and gather WebRTC statistics and 
+						performance metrics from client applications. It serves as a comprehensive 
+						tool for tracking the health, efficiency, and performance of WebRTC connections, 
+						allowing developers to capture real-time information and diagnostics about WebRTC 
+						sessions in their applications.
+					</p>
 					<a href="#" class="text-sm text-blue-600 dark:text-blue-500 hover:underline" onClick={() => setPage('client-monitor-properties')}>
                         See ClientMonitor Properties
 					</a>

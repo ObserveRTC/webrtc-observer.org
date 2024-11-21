@@ -28,15 +28,28 @@ import { createSignal } from 'solid-js';
 import { AudioPlayoutEntry, LocalCandidateEntry, ReceiverEntry, RemoteCandidateEntry } from '@observertc/client-monitor-js/lib/entries/StatsEntryInterfaces';
 
 // eslint-disable-next-line no-unused-vars
-function getResultOrEmpty<T>(accessor: (i: T) => ShowObjectAccessor, value?: T): ShowObjectAccessor {
-	if (value) return accessor(value);
+// function getResultOrEmpty<T>(accessor: (i: T) => ShowObjectAccessor, value?: T): ShowObjectAccessor {
+// 	if (value) return accessor(value);
 
-	const [result] = createSignal<ShowObjectProperties>({});
+// 	const [result] = createSignal<ShowObjectProperties>({});
 	
-	return () => ({
-		properties: result,
-		cleanup: () => {}
-	});
+// 	return () => ({
+// 		properties: result,
+// 		cleanup: () => {}
+// 	});
+// }
+
+function getResultOrEmpty<T>(accessor: (i: T) => ShowObjectAccessor, value?: T): ShowObjectAccessor {
+	return () => {
+		if (value) return accessor(value)();
+
+		const [result] = createSignal<ShowObjectProperties>({});
+		
+		return {
+			properties: result,
+			cleanup: () => {}
+		};
+	};
 }
 
 function getPrimitiveProps(value: number | undefined | null | string): ShowObjectAccessor {
@@ -102,26 +115,25 @@ export function createClientMonitorProps(monitor: ClientMonitor): ShowObjectProp
 			sendingFractionLost: monitor.sendingFractionLost,
 			receivingFractionLost: monitor.receivingFractionLost,
 
-			// func: () => createPeerConnectionProps(monitor.peerConnections[0]),
-			
+			peerConnections: createPeerConnectionArrayProps(monitor.peerConnections),
 			codecs: createCodecArrayProps(monitor.codecs),
 			inboundRtps: createInboundRtpArrayProps(monitor.inboundRtps),
 			outboundRtps: createOutboundRtpArrayProps(monitor.outboundRtps),
-			// remoteInboundRtps: createRemoteInboundRtpArrayProps(monitor.remoteInboundRtps),
-			// remoteOutboundRtps: createRemoteOutboundRtpArrayProps(monitor.remoteOutboundRtps),
-			// mediaSources: createMediaSourceArrayProps(monitor.mediaSources),
-			// dataChannels: createDataChannelArrayProps(monitor.dataChannels),
-			// transports: createTransportArrayProps(monitor.transports),
-			// iceCandidatePairs: createIceCandidatePairArrayProps(monitor.iceCandidatePairs),
-			// iceLocalCandidates: createIceLocalCandidateArrayProps(monitor.iceLocalCandidates),
-			// iceRemoteCandidates: createIceRemoteCandidateArrayProps(monitor.iceRemoteCandidates),
-			// transceivers: createTransceiverArrayProps(monitor.transceivers),
-			// senders: createSenderArrayProps(monitor.senders),
-			// sctpTransports: createSctpTransportsArratProps(monitor.sctpTransports),
-			// certificates: createCertificateArrayProps(monitor.certificates),
-			// iceServers: createIceServerArrayProps(monitor.iceServers),
-			// contributingSources: createContributingSourcesArrayProps(monitor.contributingSources),
-			// receivers: createReceiverArrayProps(monitor.receivers),
+			remoteInboundRtps: createRemoteInboundRtpArrayProps(monitor.remoteInboundRtps),
+			remoteOutboundRtps: createRemoteOutboundRtpArrayProps(monitor.remoteOutboundRtps),
+			mediaSources: createMediaSourceArrayProps(monitor.mediaSources),
+			dataChannels: createDataChannelArrayProps(monitor.dataChannels),
+			transports: createTransportArrayProps(monitor.transports),
+			iceCandidatePairs: createIceCandidatePairArrayProps(monitor.iceCandidatePairs),
+			iceLocalCandidates: createIceLocalCandidateArrayProps(monitor.iceLocalCandidates),
+			iceRemoteCandidates: createIceRemoteCandidateArrayProps(monitor.iceRemoteCandidates),
+			transceivers: createTransceiverArrayProps(monitor.transceivers),
+			senders: createSenderArrayProps(monitor.senders),
+			sctpTransports: createSctpTransportsArratProps(monitor.sctpTransports),
+			certificates: createCertificateArrayProps(monitor.certificates),
+			iceServers: createIceServerArrayProps(monitor.iceServers),
+			contributingSources: createContributingSourcesArrayProps(monitor.contributingSources),
+			receivers: createReceiverArrayProps(monitor.receivers),
 			// audioPlayouts: createAudioPlayoutArrayProps(monitor.audioPlayouts),
             
 		});
@@ -196,23 +208,23 @@ function createPeerConnectionProps(peerConnection: PeerConnectionEntry): ShowObj
 		connectionEstablishedDurationInMs:  peerConnection.connectionEstablishedDurationInMs,
 
 
-		// 'codecs': createCodecArrayProps([...peerConnection.codecs()]),
-		// 'inboundRtps()': createInboundRtpArrayProps([...peerConnection.inboundRtps()]),
-		// 'outboundRtps()': createOutboundRtpArrayProps([...peerConnection.outboundRtps()]),
-		// 'remoteInboundRtps()': createRemoteInboundRtpArrayProps([...peerConnection.remoteInboundRtps()]),
-		// 'remoteOutboundRtps()': createRemoteOutboundRtpArrayProps([...peerConnection.remoteOutboundRtps()]),
-		// 'mediaSources()': createMediaSourceArrayProps([...peerConnection.mediaSources()]),
-		// 'dataChannels()': createDataChannelArrayProps([...peerConnection.dataChannels()]),
-		// 'transports()': createTransportArrayProps([...peerConnection.transports()]),
-		// 'iceCandidatePairs()': createIceCandidatePairArrayProps([...peerConnection.iceCandidatePairs()]),
-		// 'transceivers()': createTransceiverArrayProps([...peerConnection.transceivers()]),
-		// 'senders()': createSenderArrayProps([...peerConnection.senders()]),
-		// 'sctpTransports()': createSctpTransportsArratProps([...peerConnection.sctpTransports()]),
-		// 'certificates()': createCertificateArrayProps([...peerConnection.certificates()]),
-		// 'iceServers()': createIceServerArrayProps([...peerConnection.iceServers()]),
-		// 'contributingSources()': createContributingSourcesArrayProps([...peerConnection.contributingSources()]),
-		// 'receivers()': createReceiverArrayProps([...peerConnection.receivers()]),
-		// 'audioPlayouts()': createAudioPlayoutArrayProps([...peerConnection.audioPlayouts()]),
+		'codecs': createCodecArrayProps([...peerConnection.codecs()]),
+		'inboundRtps()': createInboundRtpArrayProps([...peerConnection.inboundRtps()]),
+		'outboundRtps()': createOutboundRtpArrayProps([...peerConnection.outboundRtps()]),
+		'remoteInboundRtps()': createRemoteInboundRtpArrayProps([...peerConnection.remoteInboundRtps()]),
+		'remoteOutboundRtps()': createRemoteOutboundRtpArrayProps([...peerConnection.remoteOutboundRtps()]),
+		'mediaSources()': createMediaSourceArrayProps([...peerConnection.mediaSources()]),
+		'dataChannels()': createDataChannelArrayProps([...peerConnection.dataChannels()]),
+		'transports()': createTransportArrayProps([...peerConnection.transports()]),
+		'iceCandidatePairs()': createIceCandidatePairArrayProps([...peerConnection.iceCandidatePairs()]),
+		'transceivers()': createTransceiverArrayProps([...peerConnection.transceivers()]),
+		'senders()': createSenderArrayProps([...peerConnection.senders()]),
+		'sctpTransports()': createSctpTransportsArratProps([...peerConnection.sctpTransports()]),
+		'certificates()': createCertificateArrayProps([...peerConnection.certificates()]),
+		'iceServers()': createIceServerArrayProps([...peerConnection.iceServers()]),
+		'contributingSources()': createContributingSourcesArrayProps([...peerConnection.contributingSources()]),
+		'receivers()': createReceiverArrayProps([...peerConnection.receivers()]),
+		'audioPlayouts()': createAudioPlayoutArrayProps([...peerConnection.audioPlayouts()]),
 		
 	});
 
@@ -333,14 +345,14 @@ function createOutboundRtpProps(outboundRtp: OutboundRtpEntry): ShowObjectAccess
 		sentBytes: outboundRtp.sentBytes,
 		sentPackets: outboundRtp.sentPackets,
 
-		// getCodec: getResultOrEmpty(createCodecProps, outboundRtp.getCodec()),
-		// getMediaSource: getResultOrEmpty(createMediaSourceProps, outboundRtp.getMediaSource()),
-		// getPeerConnection: getResultOrEmpty(createPeerConnectionProps, outboundRtp.getPeerConnection()),
-		// getRemoteInboundRtp: getResultOrEmpty(createRemoteInboundRtpProps, outboundRtp.getRemoteInboundRtp()),
-		// getSender: getResultOrEmpty(createSenderProps, outboundRtp.getSender()),
-		// getSsrc: getResultOrEmpty(getPrimitiveProps, outboundRtp.getSsrc()),
-		// getTrackId: getResultOrEmpty(getPrimitiveProps, outboundRtp.getTrackId()),
-		// getTransport: getResultOrEmpty(createTransportProps, outboundRtp.getTransport()),
+		getCodec: getResultOrEmpty(createCodecProps, outboundRtp.getCodec()),
+		getMediaSource: getResultOrEmpty(createMediaSourceProps, outboundRtp.getMediaSource()),
+		getPeerConnection: getResultOrEmpty(createPeerConnectionProps, outboundRtp.getPeerConnection()),
+		getRemoteInboundRtp: getResultOrEmpty(createRemoteInboundRtpProps, outboundRtp.getRemoteInboundRtp()),
+		getSender: getResultOrEmpty(createSenderProps, outboundRtp.getSender()),
+		getSsrc: getResultOrEmpty(getPrimitiveProps, outboundRtp.getSsrc()),
+		getTrackId: getResultOrEmpty(getPrimitiveProps, outboundRtp.getTrackId()),
+		getTransport: getResultOrEmpty(createTransportProps, outboundRtp.getTransport()),
 
 		stats: outboundRtp.stats
 	});
