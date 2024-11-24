@@ -10,6 +10,8 @@ import {
     HamokServiceConsumeMediaProducerEventPayload, 
     HamokServiceCreatePipeTransportRequestPayload, 
     HamokServiceCreatePipeTransportResponsePayload, 
+    HamokServiceGetCallStatsRequestPayload, 
+    HamokServiceGetCallStatsResponsePayload, 
     HamokServiceGetClientProducersRequestPayload, 
     HamokServiceGetClientProducersResponsePayload, 
     HamokServicePipeMediaConsumerClosedEventPayload, 
@@ -50,6 +52,10 @@ export type HamokServiceEventMap = {
     'piped-media-consumer-closed': [
         payload: HamokServicePipeMediaConsumerClosedEventPayload
     ],
+    'get-all-call-stats-request': [
+        payload: HamokServiceGetCallStatsRequestPayload, 
+        resolve: HamokServiceResponseField<HamokServiceGetCallStatsResponsePayload>
+    ],
 }
 
 
@@ -77,11 +83,16 @@ type HamokEmitterEventMap = {
     'piped-media-consumer-closed': [
         payload: HamokServicePipeMediaConsumerClosedEventPayload
     ],
+    'get-all-call-stats-request': [
+        requestId: string, 
+        payload: HamokServiceGetCallStatsRequestPayload
+    ],
     'response': [
         requestId: string, 
         response: {
             error?: string, 
-            payload?: unknown 
+            payload?: unknown,
+            sourcePeerId?: string,
         }
     ],
 }
@@ -166,6 +177,7 @@ export class HamokService extends EventEmitter<HamokServiceEventMap> {
 
         if (config.devMode) {
             this._devHamok = new Hamok<HamokAppData>({
+                peerId: 'dev-'+uuid(),
                 appData: {
                 },
                 onlyFollower: true,
@@ -252,6 +264,14 @@ export class HamokService extends EventEmitter<HamokServiceEventMap> {
         await promise;
     }
 
+    public async getAllCallStats(payload: HamokServiceGetCallStatsRequestPayload): Promise<HamokServiceGetCallStatsResponsePayload[]> {
+        const [requestId, promise] = this._createBroadcastPendingRequest({ type: 'get-all-call-stats-request', payload });
+
+        this.eventEmitter.notify('get-all-call-stats-request', requestId, payload);
+
+        return promise.then(payload => payload as HamokServiceGetCallStatsResponsePayload[]);
+    }
+
     public async pipeMediaProducerTo(payload: HamokServicePipeMediaProducerToRequestPayload): Promise<HamokServicePipeMediaProducerToResponsePayload> {
         const [requestId, promise] = this._createPendingRequest({ type: 'pipe-media-producer-to', payload });
 
@@ -301,6 +321,7 @@ export class HamokService extends EventEmitter<HamokServiceEventMap> {
                 'piped-media-consumer-closed': [...(this.eventEmitter.subscriptions.getEventPeersMap('piped-media-consumer-closed') ?? [])],
                 'client-sample': [...(this.eventEmitter.subscriptions.getEventPeersMap('client-sample') ?? [])],
                 'response': [...(this.eventEmitter.subscriptions.getEventPeersMap('response') ?? [])],
+                'get-all-call-stats-request': [...(this.eventEmitter.subscriptions.getEventPeersMap('get-all-call-stats-request') ?? [])],
             },
         }
     }
@@ -394,6 +415,10 @@ export class HamokService extends EventEmitter<HamokServiceEventMap> {
             this.emit('get-client-producers-request', payload, createNonVoidResponseCallback(requestId));
         });
 
+        await this.eventEmitter.subscribe('get-all-call-stats-request', (requestId, payload) => {
+            this.emit('get-all-call-stats-request', payload, createNonVoidResponseCallback(requestId));
+        });
+
         await this.eventEmitter.subscribe('response', (requestId, response) => {
             const pendingRequest = this._pendingRequests.get(requestId);
 
@@ -452,6 +477,38 @@ export class HamokService extends EventEmitter<HamokServiceEventMap> {
                     resolve: data => {
                         this._pendingRequests.delete(requestId);
                         _resolve(data);
+                    }, 
+                    reject: error => {
+                        this._pendingRequests.delete(requestId);
+                        _reject(error);
+                    }, 
+                    timer 
+                });
+            })
+        ]
+    }
+
+    private _createBroadcastPendingRequest<T>(debugInfo: Record<string, unknown>): [requestId: string, promise: Promise<T[]>] {
+        const requestId = uuid();
+        const replies: T[] = [];
+        const peerIds = new Set<string>(
+            [...this.hamok.remotePeerIds, this.hamok.localPeerId].filter(peerId => !peerId.includes('dev-'))
+        );
+        return [
+            requestId,
+            new Promise((_resolve, _reject) => {
+                const timer = setTimeout(() => {
+                    this._pendingRequests.delete(requestId);
+                    _reject('Request timed out. debugInfo: ' + JSON.stringify(debugInfo));
+                }, 5000);
+
+                this._pendingRequests.set(requestId, { 
+                    resolve: data => {
+                        replies.push(data);
+                        if (peerIds.size === replies.length) {
+                            this._pendingRequests.delete(requestId);
+                            _resolve(replies);
+                        }
                     }, 
                     reject: error => {
                         this._pendingRequests.delete(requestId);

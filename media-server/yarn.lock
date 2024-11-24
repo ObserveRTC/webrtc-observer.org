@@ -101,10 +101,10 @@
     "@jridgewell/resolve-uri" "^3.0.3"
     "@jridgewell/sourcemap-codec" "^1.4.10"
 
-"@observertc/observer-js@^0.42.6":
-  version "0.42.6"
-  resolved "https://registry.yarnpkg.com/@observertc/observer-js/-/observer-js-0.42.6.tgz#06d58aeb80817b09616ea337252f4a3423f2d662"
-  integrity sha512-wKoBHUg0gydRMR/Y+J5e2cg03knrGsOVV99XOgnVIfjVC9IKnZdKuzltDxWfp8DvTLICzXFQNfw14s7/2v68Lw==
+"@observertc/observer-js@^0.42.7":
+  version "0.42.7"
+  resolved "https://registry.yarnpkg.com/@observertc/observer-js/-/observer-js-0.42.7.tgz#5efad5a9076ed8938fc33889aaab92c3c6c98817"
+  integrity sha512-gpXoFDe8emBstHUQ+vPp56Eaoym3N/u6i6qzWM5feLEuuViQWISxfk4d/WqPZjUb+YglwmUrPM7hNhs7sBC2Tw==
   dependencies:
     "@bufbuild/protobuf" "1.1.1"
     "@observertc/report-schemas-js" "2.2.10"

@@ -27,6 +27,7 @@ import { createGetClientProducersListener } from "./hamok-listeners/GetClientPro
 import { IntervalTrackerService } from "./services/IntervalTrackerService";
 import { createCloseClientInterval } from "./intervals/CloseClientInterval";
 import { createClientMonitorSampleListener } from "./hamok-listeners/ClientMonitorSampleListener";
+import { createGetCallStatsRequestListener } from "./hamok-listeners/GetCallStatsRequestListener";
 
 const logger = createLogger('main');
 const mediasoupService = new MediasoupService(config.mediasoup);
@@ -147,6 +148,9 @@ hamokService
     .on('get-client-producers-request', createGetClientProducersListener({
         mediasoupService,
         server,
+    }))
+    .on('get-all-call-stats-request', createGetCallStatsRequestListener({
+        observer,
     }))
     ;
 

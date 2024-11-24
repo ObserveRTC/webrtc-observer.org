@@ -1,5 +1,5 @@
 import { Switch, type Component, Match, Show } from 'solid-js';
-import { page } from './signals/signals';
+import { page, setPage } from './signals/signals';
 import Join from './views/Join';
 import { Transition } from 'solid-transition-group';
 import ObserverView from './views/OngoingCalls';
@@ -33,7 +33,9 @@ const App: Component = () => {
 							<Show when={clientStore.call?.monitor} fallback={
 								<div class='flex flex-col bg-white p-4 gap-2 mt-8 mx-4 sm:mx-auto max-w-4xl'>
 									<b>Please join a call to see the ICE connection details.</b>
+									<a href="#" class="text-sm text-blue-600 dark:text-blue-500 hover:underline" onClick={() => setPage('main')}>Back</a>
 								</div>
+								
 							} keyed>{(monitor) => (<IceConnectionPage monitor={monitor}/>)}
 							</Show>
 						</Match>

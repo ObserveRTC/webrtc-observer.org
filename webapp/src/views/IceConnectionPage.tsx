@@ -5,6 +5,7 @@ import { setPage } from '../signals/signals';
 import { clientStore } from '../stores/LocalClientStore';
 import GenericTable from '../components/GeneralTable';
 import { ClientMonitor, LocalCandidateEntry, PeerConnectionEntry, RemoteCandidateEntry } from '@observertc/client-monitor-js';
+import JSONFormatter from 'json-formatter-js';
 
 // import { setTestState } from '../signals/signals';
 // import Button from '../components/Button';
@@ -17,7 +18,7 @@ type IceConnectionPageProps = {
 
 const IceConnectionPage: Component<IceConnectionPageProps> = (props: IceConnectionPageProps) => {
 	// eslint-disable-next-line no-unused-vars
-	const [ peerConnections, setPeerConnections ] = createSignal<PeerConnectionEntry[] | undefined>();
+	const [ peerConnections, setPeerConnections ] = createSignal<{ pc: PeerConnectionEntry, stats: Record<string, unknown>}[] | undefined>();
 	const [ listener, setListener ] = createSignal<{ func: () => void }>({ func: () => {} });
 	// clientStore.call?.monitor.
 	const getCandidateTypeString = (candidateType?: LocalCandidateEntry | RemoteCandidateEntry) => {
@@ -29,8 +30,28 @@ const IceConnectionPage: Component<IceConnectionPageProps> = (props: IceConnecti
 
 	onMount(() => {
 		const func = () => {
-			const peerConnections = props.monitor?.peerConnections;
-			peerConnections && setPeerConnections([...peerConnections]);
+			const pcs: { pc: PeerConnectionEntry, stats: Record<string, unknown>}[] = [];
+			
+			for (const pc of props.monitor.peerConnections) {
+				const oStats = pc.getSelectedIceCandidatePair()?.stats;
+
+				if (!oStats) continue;
+
+				const stats: Record<string, unknown> = {
+					availableIncomingBitrate: oStats.availableIncomingBitrate,
+					availableOutgoingBitrate: oStats.availableOutgoingBitrate,
+					bytesReceived: oStats.bytesReceived,
+					bytesSent: oStats.bytesSent,
+					packetsReceived: oStats.packetsReceived,
+					packetsSent: oStats.packetsSent
+				};
+				pcs.push({
+					pc,
+					stats
+				});
+			}
+
+			0 < pcs.length && setPeerConnections(pcs);
 		};
 		setListener({ func });
 		props.monitor?.on('stats-collected', func);
@@ -43,7 +64,7 @@ const IceConnectionPage: Component<IceConnectionPageProps> = (props: IceConnecti
 	return (
 		<Grid container spacing={2}>
 			<Grid item xs={12}>
-				<For each={peerConnections()}>{pc => {
+				<For each={peerConnections()}>{({ pc, stats }) => {
 								
 					return (
 						<Section title={`PeerConnection (${pc.label})`}>
@@ -79,7 +100,7 @@ const IceConnectionPage: Component<IceConnectionPageProps> = (props: IceConnecti
 												'address': `${selectedPair.getRemoteCandidate()?.stats.address}`,
 												'port': selectedPair.getRemoteCandidate()?.stats.port,
 											}
-										]} />
+										]} />{new JSONFormatter(stats).render()}
 										{/* <div class='flex flex-col bg-white p-4 gap-2'>
 														<p>
 															<b>State</b>: {selectedPair.stats.state}
@@ -96,7 +117,7 @@ const IceConnectionPage: Component<IceConnectionPageProps> = (props: IceConnecti
 
 													
 														<b>Local Candidate:</b> 
-														{new JSONFormatter(selectedPair.getLocalCandidate()?.stats).render()}
+														
 														<hr />
 														<b>Remote Candidate:</b>
 														{new JSONFormatter(selectedPair.getRemoteCandidate()?.stats).render()}

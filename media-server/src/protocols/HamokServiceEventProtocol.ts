@@ -1,4 +1,5 @@
 import * as mediasoup from 'mediasoup';
+import { ObserverGetCallStatsResponse } from './MessageProtocol';
 
 export type HamokServiceCreatePipeTransportResponsePayload = {
     ip: string;
@@ -21,6 +22,12 @@ export type HamokServiceClientSampleEventPayload = {
 export type HamokServicePipeMediaConsumerClosedEventPayload = {
     mediaProducerId: string;
 };
+
+export type HamokServiceGetCallStatsRequestPayload = {
+
+}
+
+export type HamokServiceGetCallStatsResponsePayload = ObserverGetCallStatsResponse;
 
 export type HamokServiceConnectPipeTransportRequestPayload = {
     srcRouterId: string;

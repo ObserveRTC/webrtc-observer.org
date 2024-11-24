@@ -1,15 +1,12 @@
 import { Observer } from "@observertc/observer-js";
-import { ClientContext } from "../common/ClientContext";
 import { createLogger } from "../common/logger";
 import { ClientMessageContext } from "./ClientMessageListener";
 import { 
 	GetCallConnectionsResponse,
-	ObservedGetOngoingCallResponse, 
 	ObserverGetCallStatsResponse, 
 	Response 
 } from "../protocols/MessageProtocol";
 import { HamokService } from "../services/HamokService";
-import { connect } from "http2";
 
 const logger = createLogger('ClientMonitorSampleNotificatinListener');
 
@@ -42,110 +39,12 @@ export function createObserverRequestListener(listenerContext: ClientMonitorSamp
 
 		try {
 			switch (type) {
-				case 'getOngoingCalls': {
-					let reply: ObservedGetOngoingCallResponse = {
-						calls: [],
-					};
-
-					for (const [callId, observedCall] of observer.observedCalls) {
-						const clients: ObservedGetOngoingCallResponse['calls'][number]['clients'] = [];
-
-						for (const [clientId, observedClient] of observedCall.clients) {
-							const peerConnections: ObservedGetOngoingCallResponse['calls'][number]['clients'][number]['peerConnections'] = [];
-
-							for (const [peerConnectionId, observedPeerConnection] of observedClient.peerConnections) {
-								peerConnections.push({
-									peerConnectionId,
-									inboundAudioTrackIds: Array.from(observedPeerConnection.inboundAudioTracks.keys()),
-									inboundVideoTrackIds: Array.from(observedPeerConnection.inboundVideoTracks.keys()),
-									outboundAudioTrackIds: Array.from(observedPeerConnection.outboundAudioTracks.keys()),
-									outboundVideoTrackIds: Array.from(observedPeerConnection.outboundVideoTracks.keys()),
-								});
-							}
-
-							clients.push({
-								clientId,
-								peerConnections,
-							});
-						}
-
-						reply.calls.push({
-							callId,
-							clients,
-						});
-					}
-
-					response = reply;
-					break;
-				}
 				case 'getCallStats': {
-					const observedCall = observer.observedCalls.get(payload.callId);
-
-					if (!observedCall) {
-						error = `Call ${payload.callId} not found`;
-						break;
-					}
-
 					const reply: ObserverGetCallStatsResponse = {
-						callScore: observedCall.score,
-						clients: [],
+						rooms: [],
 					};
-					for (const client of observedCall.clients.values()) {
-						const clientStats: ObserverGetCallStatsResponse['clients'][number] = {
-							clientId: client.clientId,
-							clientScore: client.score,
-							peerConnections: [],
-						};
-						// logger.info('Client: %o', client);
-						for (const peerConnection of client.peerConnections.values()) {
-							const peerConnectionStats: ObserverGetCallStatsResponse['clients'][number]['peerConnections'][number] = {
-								peerConnectionId: peerConnection.peerConnectionId,
-								peerConnectionScore: peerConnection.score,
-								avgRttInMs: peerConnection.avgRttInMs ?? 0,
-								inboundAudioTracks: [],
-								inboundVideoTracks: [],
-								outboundAudioTracks: [],
-								outboundVideoTracks: [],
-							};
-							for (const track of peerConnection.inboundAudioTracks.values()) {
-								peerConnectionStats.inboundAudioTracks.push({
-									trackId: track.trackId,
-									trackScore: track.score,
-									receivingBitrate: track.bitrate,
-									totalLostPackets: track.totalLostPackets,
-								});
-								// logger.debug('InboundAudioTrack: %o', track);
-							}
-							for (const track of peerConnection.inboundVideoTracks.values()) {
-								peerConnectionStats.inboundVideoTracks.push({
-									trackId: track.trackId,
-									trackScore: track.score,
-									receivingBitrate: track.bitrate,
-									totalLostPackets: track.totalLostPackets,
-								});
-								// logger.debug('InboundVideoTrack: %o', track);
-							}
-							for (const track of peerConnection.outboundAudioTracks.values()) {
-								peerConnectionStats.outboundAudioTracks.push({
-									trackId: track.trackId,
-									trackScore: track.score,
-									sendingBitrate: track.sendingBitrate,
-								});
-								// logger.debug('OutboundAudioTrack: %o', track);
-							}
-							for (const track of peerConnection.outboundVideoTracks.values()) {
-								peerConnectionStats.outboundVideoTracks.push({
-									trackId: track.trackId,
-									trackScore: track.score,
-									sendingBitrate: track.sendingBitrate,
-								});
-								// logger.debug('OutboundVideoTrack: %o', track);
-							}
-							clientStats.peerConnections.push(peerConnectionStats);
-							// logger.debug('PeerConnection: %o', peerConnectionStats);
-						}
-						reply.clients.push(clientStats);
-					}
+					(await hamokService.getAllCallStats({})).forEach(response => reply.rooms.push(...response.rooms));
+					
 					response = reply;
 					break;
 				}
