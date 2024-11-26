@@ -28,6 +28,8 @@ import { IntervalTrackerService } from "./services/IntervalTrackerService";
 import { createCloseClientInterval } from "./intervals/CloseClientInterval";
 import { createClientMonitorSampleListener } from "./hamok-listeners/ClientMonitorSampleListener";
 import { createGetCallStatsRequestListener } from "./hamok-listeners/GetCallStatsRequestListener";
+import { ObserverGetCallStatsResponse } from "./protocols/MessageProtocol";
+import { createObservedCallStatsMonitor } from "./observer-listeners/ObservedCallStatsMonitor";
 
 const logger = createLogger('main');
 const mediasoupService = new MediasoupService(config.mediasoup);
@@ -107,11 +109,13 @@ hamokService
             logger.warn(`Call ${call.callId} already observed`);
             return;
         }
-        observer.createObservedCall({
+        observer.createObservedCall<{ stats: ObserverGetCallStatsResponse['rooms'][number]['callScores'] }>({
             roomId: call.roomId,
             callId: call.callId,
             serviceId: 'demo-service',
-            appData: {},
+            appData: {
+                stats: [],
+            },
         });
     })
     .on('call-ended', call => {
@@ -159,7 +163,10 @@ intervalTrackerService.addInterval('closing-clients', createCloseClientInterval(
     maxClientLifeTimeInMins: config.maxClientLifeTimeInMins,
 }))
 
-observer.on('newcall', createObservedCallLogMonitor());
+observer
+    .on('newcall', createObservedCallLogMonitor())
+    .on('newcall', createObservedCallStatsMonitor())
+    ;
 
 mediasoupService.connectRemotePipeTransport = (options) => hamokService.connectRemotePipeTransport(options);
 mediasoupService.createRemotePipeTransport = (options) => hamokService.createRemotePipeTransport(options);

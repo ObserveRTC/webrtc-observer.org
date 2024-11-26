@@ -177,51 +177,42 @@ export type ObservedScorePayload = {
 }
 
 export type ObserverGetCallStatsResponse = {
-    callScore?: ObservedScorePayload,
-    clients: {
-        clientId: string,
-        clientScore?: ObservedScorePayload,
-        peerConnections: {
-            peerConnectionId: string,
-            peerConnectionScore?: ObservedScorePayload,
-            avgRttInMs: number,
-            inboundAudioTracks: {
-                trackId: string,
-                trackScore?: ObservedScorePayload,
-                receivingBitrate: number,
-                totalLostPackets: number,
-            }[],
-            inboundVideoTracks: {
-                trackId: string,
-                trackScore?: ObservedScorePayload,
-                receivingBitrate: number,
-                totalLostPackets: number,
-            }[],
-            outboundAudioTracks: {
-                trackId: string,
-                trackScore?: ObservedScorePayload,
-                sendingBitrate: number,
-            }[],
-            outboundVideoTracks: {
-                trackId: string,
-                trackScore?: ObservedScorePayload,
-                sendingBitrate: number,
-            }[],
-        }[],
-    }[],
-}
-
-export type ObservedGetOngoingCallResponse = {
-    calls: {
-        callId: string,
+    rooms: {
+        roomId: string,
+        callScores: ObservedScorePayload[],
         clients: {
             clientId: string,
+            userId?: string,
+            clientScores: ObservedScorePayload[],
             peerConnections: {
                 peerConnectionId: string,
-                inboundAudioTrackIds: string[],
-                inboundVideoTrackIds: string[],
-                outboundAudioTrackIds: string[],
-                outboundVideoTrackIds: string[],
+                peerConnectionScores: ObservedScorePayload[],
+                rttMeasurements: {
+                    timestamp: number,
+                    avgRttInMs: number,
+                }[],
+                inboundAudioTracks: {
+                    trackId: string,
+                    trackScores: ObservedScorePayload[],
+                    receivingBitrates: number[],
+                    totalLostPackets: number[],
+                }[],
+                inboundVideoTracks: {
+                    trackId: string,
+                    trackScores: ObservedScorePayload[],
+                    receivingBitrates: number[],
+                    totalLostPackets: number[],
+                }[],
+                outboundAudioTracks: {
+                    trackId: string,
+                    trackScores: ObservedScorePayload[],
+                    sendingBitrates: number[],
+                }[],
+                outboundVideoTracks: {
+                    trackId: string,
+                    trackScores: ObservedScorePayload[],
+                    sendingBitrates: number[],
+                }[],
             }[],
         }[],
     }[],
@@ -236,12 +227,16 @@ export type GetCallConnectionsResponse = {
     }[]
 }
 
+export type GetOngoingCallStatsResponse = {
+    roomId: string,
+}
+
 export type ObserverRequestTypes = {
     'getOngoingCalls': {
 
     },
     'getCallStats': {
-        callId: string,
+        
     },
     'getCallConnections': {
     },
@@ -289,7 +284,7 @@ export type RequestMap = {
 } & {
     [k in ObserverRequest['type']]: {
         request: ObserverRequest,
-        response: ObservedGetOngoingCallResponse | 
+        response: 
         ObserverGetCallStatsResponse | 
         GetCallConnectionsResponse
     }

@@ -8,6 +8,8 @@ export type CardProps = {
 	title: string | JSX.Element,
 	icon?: JSX.Element,
 	open?: boolean,
+	backgroundColor?: string,
+	titlePaddingLeft?: string,
 	onOpen?: () => void,
 	onClose?: () => void,
 	onStateChange?: (state: boolean) => void,
@@ -31,7 +33,7 @@ export const Accordion: ParentComponent<CardProps> = (props) => {
 	return (
 		<div>
 			<div style={{ display: 'flex' }}>
-				<div style={{ float: 'left', width: '90%' }}>{props.title}</div>
+				<div style={{ float: 'left', width: '90%', background: props.backgroundColor, 'padding-left': props.titlePaddingLeft }}>{props.title}</div>
 				<div style={{ float: 'right' }}>
 					<Button onClick={onClick}>{isExpanded() ? 'Close' : 'Open'}</Button>
 				</div>

@@ -10,7 +10,6 @@ import {
 	GetCallConnectionsResponse, 
 	JoinCallResponsePayload, 
 	NotificationMap, 
-	ObservedGetOngoingCallResponse, 
 	ObserverGetCallStatsResponse, 
 	ObserverRequest, 
 	RequestMap 
@@ -174,17 +173,6 @@ export class Connection extends EventEmitter {
 		this.emit('close');
 	}
 
-	public async getCallStats(callId: string) {
-		return this._request('observer-request', {
-			operation: {
-				type: 'getCallStats',
-				payload: {
-					callId,
-				},
-			} as ObserverRequest['operation'],
-		}) as Promise<ObserverGetCallStatsResponse>;
-	}
-
 	public async getHamokState() {
 		return this._request('observer-request', {
 			operation: {
@@ -194,13 +182,15 @@ export class Connection extends EventEmitter {
 		}) as Promise<unknown>;
 	}
 
-	public async getOngoingCalls() {
+	public async getCallStats() {
 		return this._request('observer-request', {
 			operation: {
-				type: 'getOngoingCalls',
-				payload: {},
+				type: 'getCallStats',
+				payload: {
+					
+				},
 			} as ObserverRequest['operation'],
-		}) as Promise<ObservedGetOngoingCallResponse>;
+		}) as Promise<ObserverGetCallStatsResponse>;
 	}
 
 	public async getCallConnections() {

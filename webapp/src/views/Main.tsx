@@ -21,6 +21,7 @@ const Main: Component = () => {
 	onMount(() => {
 		setTimer(setInterval(async () => {
 			// console.log(await clientStore.call?.getHamokState());
+			// console.log(await clientStore.call?.getCallStats());
 
 			if (!clientStore.call) return;
 			const response = await clientStore.call.getCallConnections();
@@ -92,22 +93,22 @@ const Main: Component = () => {
 					</a> */}
 				</Section>
 
-				{/* <Section title="Observer" subsection={true}>
+				<Section title="Observer" subsection={true}>
 					<p class='text-left text-base font-sans text-gray-600 antialiased text-justify'>
-                        Short Intro about Observer
+						ObserverRTC (observer-js) is a lightweight JavaScript library designed for 
+						monitoring and analyzing WebRTC-based applications. It simplifies the process of 
+						collecting WebRTC stats, providing developers with insights into the performance 
+						of media streams, peer connections, and network conditions.
 					</p>
-					<a href="#" class="text-sm text-blue-600 dark:text-blue-500 hover:underline" onClick={() => setPage('main')}>
-                        Monitor Calls
+					<a href="#" class="text-sm text-blue-600 dark:text-blue-500 hover:underline" onClick={() => setPage('call-scores')}>
+                        Call Scores
 					</a>
-					<a href="#" class="text-sm text-blue-600 dark:text-blue-500 hover:underline" onClick={() => setPage('main')}>
-                        Show Turn Statistics
-					</a>
-				</Section> */}
+				</Section>
 
 
 				<Section title="About" subsection={false}>
 					<p class='text-left text-base font-sans text-gray-600 antialiased text-justify'>
-                        Powered by ObserveRTC and L7mp
+                        Powered by <a href="https://observertc.org">ObserveRTC</a> and <a href='https://l7mp.io/'>L7mp</a>.
 					</p>
 				</Section>
 			</Grid>

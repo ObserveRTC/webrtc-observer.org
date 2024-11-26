@@ -12,6 +12,7 @@ import SimpleCountdown from './components/Countdown/SimpleCountdown';
 import Section from './components/Section';
 import StunnerPage from './views/StunnerPage';
 import IceConnectionPage from './views/IceConnectionPage';
+import CallScoresPage from './views/CallScoresPage';
 
 
 const App: Component = () => {
@@ -39,6 +40,7 @@ const App: Component = () => {
 							} keyed>{(monitor) => (<IceConnectionPage monitor={monitor}/>)}
 							</Show>
 						</Match>
+						<Match when={page() === 'call-scores'}><CallScoresPage /></Match>
 						<Match when={page() === 'client-monitor-properties'}><ClientMonitorProperties /></Match>
 						<Match when={page() === 'videoCall'}><VideoCall /></Match>
 						<Match when={page() === 'observer'}><ObserverView /></Match>

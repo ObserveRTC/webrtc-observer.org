@@ -3,6 +3,7 @@ import { createLogger } from "../common/logger";
 import { MainEmitter } from "../common/MainEmitter";
 import { HamokServiceEventMap } from "../services/HamokService";
 import { ClientSampleDecoder as LatestClientSampleDecoder, schemaVersion as latestSchemaVersion } from "@observertc/samples-decoder";
+import { ObserverGetCallStatsResponse } from "../protocols/MessageProtocol";
 
 const logger = createLogger('ClientMonitorSampleNotificatinListener');
 
@@ -11,8 +12,9 @@ export type ClientMonitorSampleNotificatinListenerContext = {
 	mainEmitter: MainEmitter
 }
 
-type ObservedClientAppData = {
+export type ObservedClientAppData = {
 	decoder: LatestClientSampleDecoder,
+	stats: ObserverGetCallStatsResponse['rooms'][number]['clients'][number],
 }
 
 export function createClientMonitorSampleListener(listenerContext: ClientMonitorSampleNotificatinListenerContext) {
@@ -42,6 +44,12 @@ export function createClientMonitorSampleListener(listenerContext: ClientMonitor
 				mediaUnitId,
 				appData: {
 					decoder: new LatestClientSampleDecoder(),
+					stats: {
+						clientId,
+						userId,
+						clientScores: [],
+						peerConnections: [],
+					},
 				},
 			});
 

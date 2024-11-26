@@ -27,7 +27,7 @@
   "homepage": "https://github.com/balazskreith/webrtc-sfu-transcriber#readme",
   "dependencies": {
     "@bufbuild/protobuf": "^1.10.0",
-    "@observertc/observer-js": "^0.42.7",
+    "@observertc/observer-js": "^0.42.8",
     "@observertc/samples-decoder": "^2.2.12",
     "@observertc/samples-encoder": "^2.2.8",
     "@observertc/sfu-monitor-js": "^2.0.0",

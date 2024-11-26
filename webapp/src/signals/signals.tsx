@@ -8,7 +8,9 @@ export type Page =
     | 'client-monitor-properties'
     | 'ice-connection-page'
     | 'exit' 
-    | 'observer';
+    | 'observer'
+    | 'call-scores'
+    ;
 
 export const [ page, setPage ] = createSignal<Page>('main');
 

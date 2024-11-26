@@ -179,35 +179,39 @@ export type ObservedScorePayload = {
 export type ObserverGetCallStatsResponse = {
     rooms: {
         roomId: string,
-        callScore?: ObservedScorePayload,
+        callScores: ObservedScorePayload[],
         clients: {
             clientId: string,
-            clientScore?: ObservedScorePayload,
+            userId?: string,
+            clientScores: ObservedScorePayload[],
             peerConnections: {
                 peerConnectionId: string,
-                peerConnectionScore?: ObservedScorePayload,
-                avgRttInMs: number,
+                peerConnectionScores: ObservedScorePayload[],
+                rttMeasurements: {
+                    timestamp: number,
+                    avgRttInMs: number,
+                }[],
                 inboundAudioTracks: {
                     trackId: string,
-                    trackScore?: ObservedScorePayload,
-                    receivingBitrate: number,
-                    totalLostPackets: number,
+                    trackScores: ObservedScorePayload[],
+                    receivingBitrates: number[],
+                    totalLostPackets: number[],
                 }[],
                 inboundVideoTracks: {
                     trackId: string,
-                    trackScore?: ObservedScorePayload,
-                    receivingBitrate: number,
-                    totalLostPackets: number,
+                    trackScores: ObservedScorePayload[],
+                    receivingBitrates: number[],
+                    totalLostPackets: number[],
                 }[],
                 outboundAudioTracks: {
                     trackId: string,
-                    trackScore?: ObservedScorePayload,
-                    sendingBitrate: number,
+                    trackScores: ObservedScorePayload[],
+                    sendingBitrates: number[],
                 }[],
                 outboundVideoTracks: {
                     trackId: string,
-                    trackScore?: ObservedScorePayload,
-                    sendingBitrate: number,
+                    trackScores: ObservedScorePayload[],
+                    sendingBitrates: number[],
                 }[],
             }[],
         }[],
