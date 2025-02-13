@@ -1,4 +1,4 @@
-webrtc-observer.org demo on GKE
+webrtc-observer.org demo
 
 Documentation: https://github.com/ObserveRTC/webrtc-observer.org/blob/main/README.md
 
