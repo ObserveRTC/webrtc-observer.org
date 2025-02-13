@@ -25,6 +25,13 @@ helm repo update
 helm install stunner-gateway-operator stunner/stunner-gateway-operator --create-namespace --namespace=stunner-system
 ```
 
+- prometheus and grafana
+```console
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+helm install prometheus prometheus-community/kube-prometheus-stack --namespace monitoring --create-namespace
+```
+
 ### Install
 
 ```console
@@ -34,6 +41,4 @@ helm install webrtc-observer-org charts/webrtc-observer-org
 
 ## TODOs
 
-- [ ] Fix WSS
-- [ ] configure STUNner: also set loadbalancer IP?
 - [ ] add chart dependencies

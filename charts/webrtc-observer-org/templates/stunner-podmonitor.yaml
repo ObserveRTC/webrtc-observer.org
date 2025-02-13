@@ -1,0 +1,24 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: stunner-podmonitor
+  labels:
+    metrics: stunner
+    release: prometheus
+  namespace: monitoring
+spec:
+  podMetricsEndpoints:
+  - honorLabels: True
+    interval: 5s
+    port: "metrics-port"
+    path: "/metrics"
+  selector:
+    matchLabels:
+      app: stunner
+  namespaceSelector:
+    #any: true
+    matchNames:
+      - stunner
+      - stunner-system
+      - default
