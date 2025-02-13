@@ -29,7 +29,7 @@ const StunnerPage: Component = () => {
 					<Show when={clientStore.call} fallback={(
 						<b>Please join a call to see the STUNner metric dashboard.</b>
 					)}>
-						<iframe src="https://www.webrtc-observer.org/g/public-dashboards/a9b92695efd24e79b7bf29a0636?from=now-5m&to=now&timezone=browser&theme=light" title="STUNner Metrics" height="480" />
+						<iframe src="https://www.webrtc-observer.org/g/public-dashboards/25e3ab0b875740c5991ed273d1ca50b7?from=now-5m&to=now&timezone=browser&theme=light" title="STUNner Metrics" height="480" />
 					</Show>
 				</Section>
 
