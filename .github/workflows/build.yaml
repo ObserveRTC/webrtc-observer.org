@@ -1,0 +1,45 @@
+name: Build images
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - '*'
+
+jobs:
+  setup-build-publish-deploy:
+    name: Setup, Build, Publish, and Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Login to DockerHub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_USER }}
+        password: ${{ secrets.DOCKER_TOKEN }}
+
+    - name: Build images
+      run: |-
+        cd webapp
+        docker build \
+          --tag docker.io/levaitamas/webrtc-observer-webapp \
+          --build-arg host="wss://media.webrtc-observer.org:443" \
+          .
+        cd ../media-server
+        docker build \
+          --tag docker.io/levaitamas/webrtc-observer-mediaserver \
+          .
+
+    - name: Push images
+      run: |-
+        docker tag \
+          docker.io/levaitamas/webrtc-observer-webapp \
+          docker.io/levaitamas/webrtc-observer-webapp:$GITHUB_SHA
+        docker push --all-tags docker.io/levaitamas/webrtc-observer-webapp
+        docker tag \
+          docker.io/levaitamas/webrtc-observer-mediaserver \
+          docker.io/levaitamas/webrtc-observer-mediaserver:$GITHUB_SHA
+        docker push --all-tags docker.io/levaitamas/webrtc-observer-mediaserver
