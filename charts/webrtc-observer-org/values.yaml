@@ -6,7 +6,7 @@ imagePullSecrets:
 
 webdomain: www.webrtc-observer.org
 mediadomain: media.webrtc-observer.org
-publicIP: 34.23.220.83
+publicIP: 152.66.245.172
 
 webapp:
   image: docker.io/levaitamas/webrtc-observer-webapp:latest
