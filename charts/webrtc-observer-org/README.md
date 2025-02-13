@@ -31,6 +31,17 @@ helm repo add prometheus-community https://prometheus-community.github.io/helm-c
 helm repo update
 helm install prometheus prometheus-community/kube-prometheus-stack --namespace monitoring --create-namespace
 ```
+- edit grafana deployment:
+```patch
++        - name: GF_SERVER_ROOT_URL
++          value: /g
++        - name: GF_SERVER_SERVE_FROM_SUB_PATH
++          value: "true"
++        - name: GF_SECURITY_ALLOW_EMBEDDING
++          value: "true"
+        image: docker.io/grafana/grafana:11.5.1
+        imagePullPolicy: IfNotPresent
+```
 
 ### Install
 
