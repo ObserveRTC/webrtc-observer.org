@@ -4,7 +4,7 @@ metadata:
   name: grafana-external
   namespace: default
 spec:
-  externalName: grafana.monitoring.svc.cluster.local
+  externalName: prometheus-grafana.monitoring.svc.cluster.local
   ports:
   - port: 80
   type: ExternalName
