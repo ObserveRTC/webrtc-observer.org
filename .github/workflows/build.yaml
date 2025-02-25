@@ -43,3 +43,14 @@ jobs:
           docker.io/levaitamas/webrtc-observer-mediaserver \
           docker.io/levaitamas/webrtc-observer-mediaserver:$GITHUB_SHA
         docker push --all-tags docker.io/levaitamas/webrtc-observer-mediaserver
+
+    - name: Set up Helm
+      uses: azure/setup-helm@v4
+
+    - name: Deploy
+      run: |
+        mkdir ~/.kube
+        echo "${{ secrets.KUBECONFIG }}" | base64 -d > ~/.kube/config
+        helm upgrade webrtc-observer-org charts/webrtc-observer-org \
+          --set webapp.image=docker.io/levaitamas/webrtc-observer-webapp:$GITHUB_SHA \
+          --set mediaserver.image=docker.io/levaitamas/webrtc-observer-mediaserver:$GITHUB_SHA
