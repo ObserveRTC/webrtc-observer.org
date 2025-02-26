@@ -2427,10 +2427,10 @@ solid-devtools@^0.27.3:
     "@solid-devtools/debugger" "^0.22.4"
     "@solid-devtools/shared" "^0.12.3"
 
-solid-js@^1.8.11:
-  version "1.8.20"
-  resolved "https://registry.yarnpkg.com/solid-js/-/solid-js-1.8.20.tgz#5314bfe166955bea6daa8ac2ebae0c1bb1945e1f"
-  integrity sha512-SsgaExCJ97mPm9WpAusjZ484Z8zTp8ggiueQOsrm81iAP7UaxaN+wiOgnPcJ9u6B2SQpoQ4FiDPAZBqVWi1V4g==
+solid-js@^1.9.4:
+  version "1.9.4"
+  resolved "https://registry.yarnpkg.com/solid-js/-/solid-js-1.9.4.tgz#da9b5645f10875a631d93335cd50525ff36b6c27"
+  integrity sha512-ipQl8FJ31bFUoBNScDQTG3BjN6+9Rg+Q+f10bUbnO6EOTTf5NGerJeHc7wyu5I4RMHEl/WwZwUmy/PTRgxxZ8g==
   dependencies:
     csstype "^3.1.0"
     seroval "^1.1.0"
