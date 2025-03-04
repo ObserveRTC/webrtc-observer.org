@@ -1,0 +1,8 @@
+.env
+node_modules/
+package-lock.json
+yarn.lock
+.ipynb_checkpoints/
+*.ipynb
+screenshots/
+captcha-screenshot*
