@@ -11,7 +11,7 @@ export default defineConfig({
 	optimizeDeps: { 
 		exclude: [
 			'fsevents',
-			'@observertc/client-monitor-js'
+			// '@observertc/client-monitor-js'
 		] 
 	},
 	// https://vitejs.dev/config/
