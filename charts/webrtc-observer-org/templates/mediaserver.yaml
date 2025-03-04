@@ -87,8 +87,8 @@ data:
       port: 9081
       serverIp: {{ .Values.publicIP }}
       announcedIp: {{ .Values.publicIP }}
-    maxTransportsPerRouter: 6
-    maxProducerPerClients: 2
+    maxTransportsPerRouter: 999999
+    maxProducerPerClients: 999999
     maxClientLifeTimeInMins: 15
     stunnerAuthUrl: "http://stunner-auth.stunner-system:8088?service=turn"
     hamok:
