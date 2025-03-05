@@ -27,7 +27,7 @@ async function main () {
 
     if (args.doScreenshots) {
         console.log("Resetting screenshots directory");
-        await fs.promises.rmdir(SCREENSHOTS_DIR, { recursive: true });
+        await fs.promises.rm(SCREENSHOTS_DIR, { recursive: true, force: true });
         await fs.promises.mkdir(SCREENSHOTS_DIR, { recursive: true });
     }
 
