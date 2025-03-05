@@ -86,4 +86,11 @@ async function main () {
     process.exit(0);
 }
 
-main();
+
+if (Number.isFinite(args.numRooms) && 0 < args.numRooms) {
+    for (let i = 0; i < args.numRooms; i++) {
+	main();
+    }
+} else {
+    main();
+}

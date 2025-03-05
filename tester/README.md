@@ -21,6 +21,7 @@ yarn dev
 
  * `--doScreenshots` - take screenshots during the test in `SCREENSHOTS_DIR` folder (default `./screenshots`)
  * `--joiningPeers` - number of peers to join in the same room
+ * `--numRooms` - number of rooms (each room will have the same `joiningPeers` number of peer)
 
 **ENV vars**
 
