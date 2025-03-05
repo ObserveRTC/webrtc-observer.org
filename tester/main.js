@@ -27,7 +27,7 @@ async function main () {
     console.info(args);
 
     if (args.doScreenshots) {
-        console.log("Resetting screenshots directory");
+        logger.log("Resetting screenshots directory");
         await fs.promises.rm(SCREENSHOTS_DIR, { recursive: true, force: true });
         await fs.promises.mkdir(SCREENSHOTS_DIR, { recursive: true });
     }
@@ -63,9 +63,9 @@ async function main () {
         callId: args.callId,
     });
 
-    console.log("Call", call.callId);
+    logger.log("Call", call.callId);
     await sleep(3000);
-    console.log("Joining the call");
+    logger.log("Joining the call");
 
     const joiningPromises = [];
     if (Number.isFinite(args.joiningPeers) && 0 < args.joiningPeers) {

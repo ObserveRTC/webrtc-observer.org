@@ -135,7 +135,7 @@ class Assistant {
         if (!check()) {
             this.onEndedCall(() => {
                 check();
-            })    
+            })
         }
     }
 
@@ -159,7 +159,7 @@ class Assistant {
             logger.info(`Attempted to remove a call (${callId}) does not exists`);
             return false;
         }
-        
+
         logger.info(`End call ${callId}`);
         call.page.close();
         this._calls.delete(callId);
@@ -253,7 +253,7 @@ class Assistant {
                 hasTouch: false,
                 isLandscape: false,
             },
-            args: [ 
+            args: [
                 '--no-sandbox',
                 '--no-zygote',
                 '--ignore-certificate-errors',
@@ -324,15 +324,15 @@ class Assistant {
             logger.log("Page is closed");
         });
 
-        
+
         return page;
     }
 
     async _join({ page, callId }) {
         let awaiter = () => Promise.resolve();
-        
+
         if (callId) {
-            console.log("\n\n\n\nCallId is provided!!!!!\n\n\n\n", callId);
+            logger.log("CallId provided, callId:", callId);
             makeReadonlyWindowProperty(page, PageParamNames.callId, callId);
         } else {
             awaiter = () => new Promise((resolve, reject) => {
@@ -342,18 +342,18 @@ class Assistant {
                     }, PageParamNames.callId);
 
                     if (callId) {
-                        console.log("CallId is ready", callId);
+                        logger.log("CallId is ready, callId:", callId);
                         clearInterval(timer);
                         resolve();
                     } else {
-                        console.log("Waiting for callId");
+                        logger.log("Waiting for callId");
                     }
                 }, 1000);
             });
         }
         // await page.goto('https://www.webrtc-observer.org/');
         const url = this._baseUrl + (callId ? `?callId=${callId}` : "");
-        
+
         await page.goto(url);
         await sleep(2000);
         await page.addScriptTag({ path: "./bundles/webrtc-observer-call.js"});
