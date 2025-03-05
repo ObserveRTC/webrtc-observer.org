@@ -5,6 +5,12 @@ on:
   push:
     branches:
       - '*'
+    paths-ignore:
+      - '.github/workflows/**'
+      - '.vscode/**'
+      - '**.md'
+      - 'grafana/**'
+      - 'tester/**'
 
 jobs:
   setup-build-publish-deploy:
