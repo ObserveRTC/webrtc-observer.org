@@ -73,15 +73,16 @@ async function main () {
                 callId: call.callId,
             }));
         }
-    
+
         await Promise.all(joiningPromises);
     }
-
 
     await sleep(10000);
 
     assistant.close();
+    await sleep(1000);
+    logger.log("Exiting..");
+    process.exit(0);
 }
 
 main();
-
