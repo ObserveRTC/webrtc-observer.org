@@ -16,6 +16,7 @@ const PUPETEER_EXECUTABLE_PATH = process.env.PUPETEER_EXECUTABLE_PATH;
 const SCREENSHOTS_DIR = process.env.SCREENSHOTS_DIR;
 const APPLICATION_NAME = pjson.name;
 const APPLICATION_VERSION = pjson.version;
+const MEASUREMENT_LENGTH_IN_SECONDS = parseInt(process.env.MEASUREMENT_LENGTH || "10", 10);
 
 const logger = createLogger("main");
 
@@ -77,7 +78,7 @@ async function main () {
         await Promise.all(joiningPromises);
     }
 
-    await sleep(10000);
+    await sleep(MEASUREMENT_LENGTH_IN_SECONDS * 1000);
 
     assistant.close();
     await sleep(1000);
