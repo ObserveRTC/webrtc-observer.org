@@ -34,7 +34,7 @@ async function main () {
     const assistant = Assistant.builder()
         .withAppName(APPLICATION_NAME)
         .withAppVersion(APPLICATION_VERSION)
-        .withDebugMode(DEBUG_MODE || true)
+        .withDebugMode(DEBUG_MODE && true)
         .withPupeteerExecutablePath(PUPETEER_EXECUTABLE_PATH)
         .withScreenshotsDirectory(args.doScreenshots ? SCREENSHOTS_DIR : undefined)
         .withRunningEnv(RUNNING_ENV)
