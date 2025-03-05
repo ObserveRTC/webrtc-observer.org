@@ -13,7 +13,7 @@ const RUNNING_ENV = process.env.RUNNING_ENV || "No Running Environment is Define
 // const ICE_SERVER_URL = process.env.ICE_SERVER_URL || "stun:stun.l.google.com:19302";
 const DEBUG_MODE = process.env.DEBUG_MODE === "true"
 const PUPETEER_EXECUTABLE_PATH = process.env.PUPETEER_EXECUTABLE_PATH;
-const SCREENSHOTS_DIR = process.env.SCREENSHOTS_DIR;
+const SCREENSHOTS_DIR = process.env.SCREENSHOTS_DIR || "./screenshots";
 const APPLICATION_NAME = pjson.name;
 const APPLICATION_VERSION = pjson.version;
 const MEASUREMENT_LENGTH_IN_SECONDS = parseInt(process.env.MEASUREMENT_LENGTH || "10", 10);
