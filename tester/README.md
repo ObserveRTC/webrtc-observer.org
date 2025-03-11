@@ -3,7 +3,16 @@ Pupeteer Tester for webrtc-observer.org
 
 ## Install
 
+1. Install software
+
 `npm i` or `yarn`
+
+2. Create test video
+
+```shell
+wget https://download.blender.org/peach/bigbuckbunny_movies/big_buck_bunny_720p_stereo.avi
+ffmpeg -i big_buck_bunny_720p_stereo.avi -t 30 -pix_fmt yuv420p bbb.y4m
+```
 
 ## Build
 
@@ -30,3 +39,4 @@ yarn dev
 | `SCREENSHOTS_DIR`| directory to save screenshots |
 | `DEBUG_MODE` | enable verbose logging |
 | `MEASUREMENT_LENGTH_IN_SECONDS` | length of traffic generation in seconds (default: 10) |
+| `VIDEO_PATH` | video input file path (required format: y4m) |

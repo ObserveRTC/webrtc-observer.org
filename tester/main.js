@@ -17,11 +17,19 @@ const SCREENSHOTS_DIR = process.env.SCREENSHOTS_DIR || "./screenshots";
 const APPLICATION_NAME = pjson.name;
 const APPLICATION_VERSION = pjson.version;
 const MEASUREMENT_LENGTH_IN_SECONDS = parseInt(process.env.MEASUREMENT_LENGTH || "10", 10);
+const VIDEO_PATH = process.env.VIDEO_PATH || "bbb.y4m";
 
 const logger = createLogger("main");
 
 logger.log("screenshots dir", SCREENSHOTS_DIR);
+logger.log("video path", VIDEO_PATH);
 logger.log("Pupeteer executable path (in case of undefined the default is used)", PUPETEER_EXECUTABLE_PATH);
+
+if (!fs.existsSync(VIDEO_PATH)) {
+    logger.log("Input Video file not found:", VIDEO_PATH);
+    logger.log("Aborting..");
+    process.exit(1);
+}
 
 async function main () {
     console.info(args);
@@ -36,6 +44,7 @@ async function main () {
         .withAppName(APPLICATION_NAME)
         .withAppVersion(APPLICATION_VERSION)
         .withDebugMode(DEBUG_MODE && true)
+        .withVideoPath(VIDEO_PATH)
         .withPupeteerExecutablePath(PUPETEER_EXECUTABLE_PATH)
         .withScreenshotsDirectory(args.doScreenshots ? SCREENSHOTS_DIR : undefined)
         .withRunningEnv(RUNNING_ENV)

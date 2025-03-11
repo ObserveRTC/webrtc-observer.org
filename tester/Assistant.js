@@ -272,7 +272,7 @@ class Assistant {
                 '--use-fake-device-for-media-stream',
                 '--mute-audio',
                 '--allow-running-insecure-content',
-                // `--use-file-for-fake-video-capture=${this._videoPath}`,
+                `--use-file-for-fake-video-capture=${this._videoPath}`,
                 `--use-file-for-fake-audio-capture=${this._audioPath}`,
                 // `--unsafely-treat-insecure-origin-as-secure=${this._sfuServerUrl}`,
                 "--enable-automation",
