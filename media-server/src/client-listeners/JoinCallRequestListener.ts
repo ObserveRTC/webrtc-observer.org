@@ -1,19 +1,17 @@
-import { ClientContext } from "../common/ClientContext";
+import { CloudSfu, Router } from "@l7mp/cloud-sfu-client";
 import { createLogger } from "../common/logger";
 import { JoinCallResponsePayload, Response } from "../protocols/MessageProtocol";
-import { HamokService } from "../services/HamokService";
-import { MediasoupService, RouterAppData } from "../services/MediasoupService"
 import { ClientMessageContext } from "./ClientMessageListener";
-import * as mediasoup from 'mediasoup';
 
 const logger = createLogger('JoinCallRequestListener');
 
 export type JoinCallRequestListenerContext = {
-		mediasoupService: MediasoupService;
-		hamokService: HamokService,
+		// mediasoupService: MediasoupService;
+		// hamokService: HamokService,
 		maxTransportsPerRouter: number;
 		clientMaxLifetimeInMs: number;
-		stunnerAuthUrl?: string;
+		// stunnerAuthUrl?: string;
+		cloudSfu: CloudSfu,
 }
 
 type TurnServerConfig = {
@@ -25,10 +23,11 @@ type TurnServerConfig = {
 
 export function createJoinCallRequestListener(listenerContext: JoinCallRequestListenerContext) {
 		const { 
-			mediasoupService,
-			hamokService,
-			stunnerAuthUrl,
+			// mediasoupService,
+			// hamokService,
+			// stunnerAuthUrl,
 			clientMaxLifetimeInMs,
+			cloudSfu
 		} = listenerContext;
 		
 		const result = async (messageContext: ClientMessageContext) => {
@@ -47,87 +46,64 @@ export function createJoinCallRequestListener(listenerContext: JoinCallRequestLi
 					));
 				}
 
-				if (request.callId) {
-					const ongoingCall = hamokService.calls.get(request.callId);
-					if (!ongoingCall) {
-						return messageContext.send(new Response(
-							request.requestId,
-							undefined,
-							`Call ${request.callId} not found`
-						));
-					}
-					client.callId = request.callId;
-					client.roomId = ongoingCall.roomId;
-
-					logger.info(`Client ${client.clientId} changed room and call to ${client.callId}, room: ${client.roomId}.`);
-				}
-
-				logger.debug(`Client ${client.clientId} (${client.userId}) joining call ${client.callId}, room: ${client.roomId}. request: %o`, request);
-
-				let closeClient = false;
-				let response: JoinCallResponsePayload | undefined;
 				let error: string | undefined;
-				
+				let response: JoinCallResponsePayload | undefined;
+				let closeClient = false;
+
 				try {
-					let router = [ ...mediasoupService.routers.values() ].find(router => router.appData.callId === client.callId);
+					let router: Router | undefined;
 
-					if (!router) {
-						router = await mediasoupService.createRouter(client.callId);
-					}
+					// logger.debug('Join call request: %s', JSON.stringify(request, null, 2));
 
-					client.routerId = router.id;
-
-					if (listenerContext.maxTransportsPerRouter <= router.appData.transports.size) {
-						closeClient = true;
-						throw new Error(`Max transports per router reached`);
-					}
-
-					let turnConfig: TurnServerConfig | undefined;
-					try {
-						if (stunnerAuthUrl) {
-							const turnResponse = await (await fetch(stunnerAuthUrl)).json();
-							turnConfig = (await turnResponse) as TurnServerConfig;
-
-							logger.info(`Turn response: %o`, turnConfig);
+					if (request.callId) {
+						router = [ ...cloudSfu.routers.values() ].find(router => router.appData.callId === request.callId);
+						
+						if (!router) throw new Error(`Call ${request.callId} not found`);
+						
+						if (router.webRtcTransports.size >= listenerContext.maxTransportsPerRouter) {
+							closeClient = true;
+							throw new Error(`Max transports per call reached`);
 						}
-					} catch (err) {
-						logger.error(`Failed to fetch turn server config: %o`, err);
-						turnConfig = undefined;
+
+						client.callId = request.callId;
+						client.roomId = router.appData.roomId as string;
+						client.routerId = router.id;
+	
+						logger.info(`Client ${client.clientId} changed room and call to ${client.callId}, room: ${client.roomId}.`);
+					} else {
+						router = await cloudSfu.createRouter({
+							appData: {
+								roomId: client.roomId,
+								callId: client.callId,
+							},
+						});
+						client.routerId = router.id;
 					}
 					
-					if (!turnConfig) {
-						logger.warn(`No turn server config available`);
-					}
+					logger.debug('Client %s joined call %s, routerId: %s', client.clientId, client.callId, client.routerId);
+
+					if (!router) throw new Error(`Failed to create router`);
+
 					
-					await hamokService.joinClient({
-						callId: client.callId,
-						clientId: client.clientId,
-						roomId: client.roomId,
-						routerId: router.id,
-						userId: client.userId,
-						turnUris: turnConfig ? turnConfig.uris : [],
-						mediaServerIp: mediasoupService.announcedAddress,
-					})
+					// logger.debug('router.rtpCapabilities: %s', JSON.stringify(router.rtpCapabilities, null, 2));
 
 					response = {
 						callId: client.callId,
 						rtpCapabilities: router.rtpCapabilities,
-						iceServers: turnConfig ? [{
-							credential: turnConfig.password,
-							credentialType: 'password',
-							urls: turnConfig.uris,
-							username: turnConfig.username,
-						}] : [],
+						// iceServers: turnConfig ? [{
+						// 	credential: turnConfig.password,
+						// 	credentialType: 'password',
+						// 	urls: turnConfig.uris,
+						// 	username: turnConfig.username,
+						// }] : [],
 						clientCreatedServerTimestamp: client.created,
-						innerServerIp: mediasoupService.announcedAddress,
+						// innerServerIp: mediasoupService.announcedAddress,
+						innerServerIp: '127.0.0.1', // its for the graph to visualize the connection
 						clientMaxLifetimeInMs,
 					};
-
-					logger.info(`Client ${client.clientId} joined call ${router.id}`);
-
 				} catch (err) {
-					response = undefined;
 					error = `${err}`;
+					response = undefined;
 				}
 
 				messageContext.send(new Response(

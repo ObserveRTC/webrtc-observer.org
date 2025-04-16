@@ -59,13 +59,13 @@ export class JoinCallRequest {
 
 export type JoinCallResponsePayload = {
     callId: string,
-    readonly rtpCapabilities: mediasoup.types.RtpCapabilities,
-    iceServers: {
-        credential: string;
-        credentialType: 'password';
-        urls: string | string[];
-        username: string;
-    }[],
+    rtpCapabilities: mediasoup.types.RtpCapabilities,
+    // iceServers: {
+    //     credential: string;
+    //     credentialType: 'password';
+    //     urls: string | string[];
+    //     username: string;
+    // }[],
     clientCreatedServerTimestamp: number,
     clientMaxLifetimeInMs?: number,
     innerServerIp: string,

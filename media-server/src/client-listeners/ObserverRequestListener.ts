@@ -6,19 +6,16 @@ import {
 	ObserverGetCallStatsResponse, 
 	Response 
 } from "../protocols/MessageProtocol";
-import { HamokService } from "../services/HamokService";
 
 const logger = createLogger('ClientMonitorSampleNotificatinListener');
 
 export type ClientMonitorSampleNotificatinListenerContext = {
 	observer: Observer,
-	hamokService: HamokService,
 }
 
 export function createObserverRequestListener(listenerContext: ClientMonitorSampleNotificatinListenerContext) {
 	const { 
 		observer,
-		hamokService,
 	} = listenerContext;
 	const result = async (messageContext: ClientMessageContext) => {
 		const { 
@@ -43,7 +40,6 @@ export function createObserverRequestListener(listenerContext: ClientMonitorSamp
 					const reply: ObserverGetCallStatsResponse = {
 						rooms: [],
 					};
-					(await hamokService.getAllCallStats({})).forEach(response => reply.rooms.push(...response.rooms));
 					
 					response = reply;
 					break;
@@ -52,23 +48,11 @@ export function createObserverRequestListener(listenerContext: ClientMonitorSamp
 					const reply: GetCallConnectionsResponse = {
 						connections: [],
 					}
-					await hamokService.clients.ready;
-					for (const [, callClient] of hamokService.clients.entries()) {
-						if (callClient.callId !== client.callId) continue;
-
-						reply.connections.push({
-							clientId: callClient.clientId,
-							turnUris: callClient.turnUris,
-							mediaServerIp: callClient.mediaServerIp,
-							userId: callClient.userId,
-						});
-					}
 
 					response = reply;
 					break;
 				}
 				case 'getHamokState': {
-					response = hamokService.getStats();
 					break;
 				}
 			}

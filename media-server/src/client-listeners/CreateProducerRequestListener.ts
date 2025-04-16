@@ -1,3 +1,4 @@
+import { CloudSfu, MediaProducer } from "@l7mp/cloud-sfu-client";
 import { ClientContext } from "../common/ClientContext";
 import { createLogger } from "../common/logger";
 import { ConsumerCreatedNotification, CreateProducerResponsePayload, Response } from "../protocols/MessageProtocol";
@@ -5,18 +6,20 @@ import { HamokService } from "../services/HamokService";
 import { MediasoupService } from "../services/MediasoupService"
 import { ClientMessageContext } from "./ClientMessageListener";
 import * as mediasoup from 'mediasoup';
+import { handleCreatedMediaConsumer } from "../common/CreatedConsumerHandler";
 
 const logger = createLogger('CreateProducerRequestListener');
 
 export type CreateProducerRequestListenerContext = {
-	mediasoupService: MediasoupService,
-	hamokService: HamokService,
+	// mediasoupService: MediasoupService,
+	// hamokService: HamokService,
+	cloudSfu: CloudSfu,
 	maxProducerPerClients: number,
 }
 
 export function createCreateProducerRequestListener(listenerContext: CreateProducerRequestListenerContext) {
 	const { 
-		hamokService,
+		cloudSfu,
 	} = listenerContext;
 
 	const result = async (messageContext: ClientMessageContext) => {
@@ -38,14 +41,26 @@ export function createCreateProducerRequestListener(listenerContext: CreateProdu
 				`Max producers per client reached`
 			));
 		}
+		const router = cloudSfu.routers.get(client.routerId);
 
-		let mediaProducer: mediasoup.types.Producer | undefined;
+		if (!router) {
+			return messageContext.send(new Response(
+				request.requestId,
+				undefined,
+				`Router ${client.routerId} not found`
+			));
+		}
+
+		let mediaProducer: MediaProducer | undefined;
 		let response: CreateProducerResponsePayload | undefined;
 		let error: string | undefined;
 		try {
 			const newproducer = await client.sndTransport.produce({
 				kind: request.kind,
 				rtpParameters: request.rtpParameters,
+				appData: {
+					client
+				}
 			});
 
 			newproducer.observer.once('close', () => {
@@ -74,22 +89,51 @@ export function createCreateProducerRequestListener(listenerContext: CreateProdu
 			// 	console.log('Producer stats', stats);
 			// }, 5000);
 			try {
-				for (const [consumingClientId, consumingClient] of hamokService.clients.entries()) {
-					if (consumingClientId === client.clientId) continue;
+				for (const transport of router.webRtcTransports.values()) {
+					if (transport.appData.role !== 'consuming' || !transport.appData.client) continue;
+					
+					const consumingClient = transport.appData.client as ClientContext;
+
 					if (consumingClient.roomId !== client.roomId) continue;
 					if (consumingClient.callId !== client.callId) continue;
+					if (consumingClient.clientId === client.clientId) continue;
 					if (!consumingClient.routerId) continue;
-
-					hamokService.consumeMediaProducer({
-						consumingClientId: consumingClient.clientId,
-						producingClientId: client.clientId,
-						producingUserId: client.userId,
-						mediaProducerId: mediaProducer.id,
-						producingRouterId: client.routerId,
+					
+					const mediaConsumer = await transport.consume({
+						producerId: mediaProducer.id,
+						rtpCapabilities: router.rtpCapabilities,
+						paused: mediaProducer.kind === 'video',
+						appData: {
+							client: consumingClient,
+						}
 					});
+
+					if (!mediaConsumer) {
+						logger.warn(`Failed to consume mediaProducer ${mediaProducer.id} from client ${client.clientId}`);
+						continue;
+					}
+
+					handleCreatedMediaConsumer({
+						mediaConsumer,
+						mediaProducer,
+					})
 				}
+				// for (const [consumingClientId, consumingClient] of hamokService.clients.entries()) {
+				// 	if (consumingClientId === client.clientId) continue;
+				// 	if (consumingClient.roomId !== client.roomId) continue;
+				// 	if (consumingClient.callId !== client.callId) continue;
+				// 	if (!consumingClient.routerId) continue;
+
+				// 	hamokService.consumeMediaProducer({
+				// 		consumingClientId: consumingClient.clientId,
+				// 		producingClientId: client.clientId,
+				// 		producingUserId: client.userId,
+				// 		mediaProducerId: mediaProducer.id,
+				// 		producingRouterId: client.routerId,
+				// 	});
+				// }
 			} catch (err) {
-				logger.error(`Error occurred while trying to consume media producer ${mediaProducer.id}`, err);
+				logger.error(`Error occurred while trying to consume media producer ${mediaProducer.id}. Err: ${err}`);
 			}
 		}
 

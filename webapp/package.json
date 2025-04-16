@@ -17,18 +17,19 @@
 		"@typescript-eslint/eslint-plugin": "^6.19.0",
 		"@typescript-eslint/parser": "^6.19.0",
 		"autoprefixer": "^10.4.16",
+		"esbuild": "^0.24.0",
 		"eslint": "^8.56.0",
 		"eslint-plugin-solid": "^0.13.1",
 		"postcss": "^8.4.33",
 		"solid-devtools": "^0.27.3",
 		"tailwindcss": "^3.4.1",
 		"typescript": "^5.1.3",
-		"vite-plugin-solid": "^2.7.0",
 		"vite": "^5.4.12",
-    	"esbuild": "^0.24.0"
+		"vite-plugin-solid": "^2.7.0"
 	},
 	"dependencies": {
-		"@observertc/client-monitor-js": "^3.11.0",
+		"@huddle01/observer-client-sdk": "^0.12.0",
+		"@observertc/client-monitor-js": "^4.0.1-b921be1.0",
 		"@observertc/samples-encoder": "^2.2.12",
 		"@solid-primitives/clipboard": "^1.5.10",
 		"@suid/material": "^0.16.0",
@@ -41,7 +42,7 @@
 		"solid-collapse": "^1.1.0",
 		"solid-js": "^1.8.11",
 		"solid-transition-group": "^0.2.3",
-		"ua-parser-js": "^1.0.37",
+		"ua-parser-js": "^2.0.2",
 		"uuid": "^10.0.0"
 	}
 }

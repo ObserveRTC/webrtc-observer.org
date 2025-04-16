@@ -31,6 +31,7 @@
     "@observertc/samples-decoder": "^2.2.12",
     "@observertc/samples-encoder": "^2.2.8",
     "@observertc/sfu-monitor-js": "^2.0.0",
+    "@l7mp/cloud-sfu-client": "../../l7mp-poc/client-sdk",
     "@types/ws": "^8.2.2",
     "events": "^3.3.0",
     "hamok": "2.6.1-029cb16.0",

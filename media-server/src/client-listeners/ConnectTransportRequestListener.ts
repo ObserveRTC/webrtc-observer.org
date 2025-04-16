@@ -1,3 +1,4 @@
+import { CloudSfu } from "@l7mp/cloud-sfu-client";
 import { createLogger } from "../common/logger";
 import { ConnectTransportResponsePayload, Response } from "../protocols/MessageProtocol";
 import { ClientMessageContext } from "./ClientMessageListener";

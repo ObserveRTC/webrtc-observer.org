@@ -1,3 +1,4 @@
+import { CloudSfu } from "@l7mp/cloud-sfu-client";
 import { ClientContext } from "../common/ClientContext";
 import { createLogger } from "../common/logger";
 import { MediasoupService } from "../services/MediasoupService"
@@ -6,12 +7,13 @@ import { ClientMessageContext, ClientMessageListener } from "./ClientMessageList
 const logger = createLogger('ControlProducerNotificationListener');
 
 export type ControlProducerNotificationListenerContext = {
-	mediasoupService: MediasoupService,
+	// mediasoupService: MediasoupService,
+	cloudSfu: CloudSfu,
 }
 
 export function createControlProducerNotificationListener(listenerContext: ControlProducerNotificationListenerContext): ClientMessageListener {
 	const { 
-		mediasoupService,
+		cloudSfu,
 	} = listenerContext;
 
 	const result = async (messageContext: ClientMessageContext) => {
@@ -26,7 +28,9 @@ export function createControlProducerNotificationListener(listenerContext: Contr
 			return logger.warn(`Producer ${request.producerId} not found for client ${client.clientId}`);
 		}
 
-		const producer = mediasoupService.mediaProducers.get(request.producerId);
+		const router = cloudSfu.routers.get(client.routerId ?? '');
+		const producer = router?.mediaProducers.get(request.producerId);
+		
 		if (!producer) {
 			return logger.warn(`Producer ${request.producerId} not found`);
 		}

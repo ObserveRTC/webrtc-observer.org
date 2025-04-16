@@ -15,14 +15,13 @@ import {
 	RequestMap 
 } from './MessageProtocol';
 import { 
-	ClientSampleEncoder, 
 	schemaVersion 
 } from '@observertc/samples-encoder';
 import { 
 	ClientMonitor, 
 	ClientMonitorConfig, 
-	createClientMonitor 
 } from '@observertc/client-monitor-js';
+import { HuddleObserverConnection } from './HuddleObserverConnection';
 
 const logger = console;
 
@@ -30,7 +29,7 @@ export type ConnectionConfig = {
 	clientId: string;
 	serverUri: string;
 	requestTimeoutInMs: number;
-	monitor: ClientMonitorConfig;
+	monitor: Partial<ClientMonitorConfig>;
 	callId?: string;
 	forceRelay?: boolean;
 	userId?: string,
@@ -74,14 +73,21 @@ export class Connection extends EventEmitter {
 	public sndTransport?: Transport;
 	public rcvTransport?: Transport;
 	public readonly monitor: ClientMonitor;
-	private readonly _encoder: ClientSampleEncoder;
+	private _observerConnection?: HuddleObserverConnection;
 
 	public constructor(
 		public readonly config: ConnectionConfig
 	) {
 		super();
-		this.monitor = createClientMonitor(config.monitor);
-		this._encoder = new ClientSampleEncoder();
+		// this.monitor = createClientMonitor(config.monitor);
+		this.monitor = new ClientMonitor(config.monitor);
+
+		// this.monitor.addIssue({
+		// 	type: 'test-issue',
+		// 	payload: {
+		// 		producerId: '123',
+		// 	},
+		// });
 
 		this._onNewProducer = this._onNewProducer.bind(this);
 	}
@@ -93,13 +99,16 @@ export class Connection extends EventEmitter {
 		if (!this._device) {
 			this._device = new Device();
 			// const deviceMonitor = this.monitor.collectors.addMediasoupDevice(this._device);
-			this.monitor.collectors.addMediasoupDevice(this._device);
-			this.monitor.on('sample-created', ({ clientSample }) => {
-				const sample = this._encoder.encodeToBase64(clientSample);
-				this._notify('client-monitor-sample-notification', { 
-					sample });
+			this.monitor.addSource(this._device);
+			this.monitor.on('sample-created', (event) => {
+				logger.info('Sample created', event.sample, event.clientMonitor);
+				this._notify('client-monitor-sample-notification', {
+					sample: JSON.stringify(event.sample),
+				});
 			});
-
+			this.monitor.on('stats-collected', (event) => {
+				logger.info('Sample created', event.collectedStats);
+			});
 			// this._deviceMonitor = deviceMonitor;
 		}
 
@@ -148,6 +157,18 @@ export class Connection extends EventEmitter {
 		await this._device.load({ routerRtpCapabilities });
 		this.sndTransport = await this._createTransportProcess('createSendTransport', routerRtpCapabilities, iceServers);
 		this.rcvTransport = await this._createTransportProcess('createRecvTransport', routerRtpCapabilities, iceServers);
+
+		if (!this._observerConnection && response.observerAccessToken) {
+			this._observerConnection = new HuddleObserverConnection({
+				clientId: this.config.clientId,
+				serverUri: 'ws://localhost:8080',
+				userId: this.config.userId,
+				requestTimeoutInMs: this.config.requestTimeoutInMs,
+				callId: this.config.callId,
+				accessToken: response.observerAccessToken,
+			});
+			// await thi	s._observerConnection.join();
+		}
 
 		this.emit('join');
 

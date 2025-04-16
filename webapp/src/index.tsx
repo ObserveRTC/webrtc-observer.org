@@ -6,6 +6,30 @@ import './index.css';
 import { updateClientMediaDevices } from './stores/LocalClientStore';
 // import { createClientMonitor, TrackStats } from '@observertc/client-monitor-js';
 
+// const dashboardClient = new clientSDK.ObserverDashboardClient({
+// 	connection: {
+// 		url: 'ws://localhost:8080',
+// 		getAccessToken: async () => btoa(JSON.stringify({
+// 			clientId: 'asasdasd',
+// 		}))
+// 	}
+// });
+
+// dashboardClient.connect().then(async () => {
+// 	// const samples = await dashboardClient.createClientSamplesFrame({
+// 	// 	callId: 'annie-hall-35427d27',
+// 	// 	clientId: '78715dd3-6e01-41d4-be78-5fbd6abca3fc',
+// 	// });
+// 	// samples.on('newrow', (row) => {
+// 	// 	console.warn('new row', row);
+// 	// });
+
+// 	dashboardClient.findCalls({
+// 		callId: 'apocalypse-now-31d48f2a',
+// 	});
+// 	// samples.open();
+// });
+
 
 // shim the RTCPeerConnection with a proxy to monitor the connection
 // const originalRTCPeerConnection = RTCPeerConnection;

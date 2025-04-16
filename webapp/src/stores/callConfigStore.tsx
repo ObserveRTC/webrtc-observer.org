@@ -12,6 +12,7 @@ const forceRelay = window.location.search.includes('forceRelay') ? true : undefi
 export const [ callConfig, setCallConfig ] = createStore<ConnectionConfig>({
 	monitor: {
 		collectingPeriodInMs: 1000,
+		samplingPeriodInMs: 2000,
 	},
 	requestTimeoutInMs: 10000,
 	serverUri: import.meta.env.VITE_MEDIA_SERVER_HOST ?? SERVER ?? `ws://localhost:${DEFAULT_PORT}`,

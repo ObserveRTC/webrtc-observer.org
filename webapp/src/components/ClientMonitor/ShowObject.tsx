@@ -40,6 +40,10 @@ const urlColor = "#0366d6";            // GitHub blue for URLs
 function ShowObject(props: ShowObjectProps) {
 	const [isExpanded, setIsExpanded] = props?.isExpanded ?? createSignal<string[]>([]);
 
+	// console.warn('ShowObject', props.level, props.properties());
+	// if (3 < (props?.level ?? 0)) {
+	// 	return (<></>)
+	// }
 	onCleanup(() => props.cleanup?.());
 
 	const isArray = Array.isArray;
@@ -47,7 +51,7 @@ function ShowObject(props: ShowObjectProps) {
 	// console.warn('created', props.level, props.properties(), isExpanded());
 	return (
 		<Show when={props.properties()} keyed>{(fields) => {
-			// console.warn('expnded', isExpanded(), props.level);
+			// console.warn('expnded', isExpanded(), props props.level);
 
 			return (
 				<div style={{ 'margin-left': `${props.level ?? 0}rem`, 'font-family': 'monospace' }}>

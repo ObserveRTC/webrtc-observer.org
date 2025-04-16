@@ -9,6 +9,8 @@ import RemoteClientVideo from '../components/RemoteClientVideo';
 import RemoteClientAudio from '../components/RemoteClientAudio';
 import { clientStore } from '../stores/LocalClientStore';
 import { writeClipboard } from '@solid-primitives/clipboard';
+import InfoBox from '../components/InfoBox';
+import { DefaultScoreCalculatorSubtractions } from '@observertc/client-monitor-js/lib/scores/DefaultScoreCalculator';
 // import { setTestState } from '../signals/signals';
 // import Button from '../components/Button';
 
@@ -17,11 +19,39 @@ import { writeClipboard } from '@solid-primitives/clipboard';
 const VideoCall: Component = () => {
 	const [ error, setError ] = createSignal<string | undefined>();
 	const [ copyBtnText, setCopyBtnText ] = createSignal<string | undefined>();
+	const [ clientScore, setClientScore ] = createSignal<number | undefined>();
+	const [ pcScores, setPcScores ] = createSignal<{ peerConnectionId: string, score: string }[]>([]);
+	const [ pcScoreDetails, setPcScoreDetails ] = createSignal<{ peerConnectionId: string, reasons: string }[] | undefined>();
+	const statsListener = () => {
+		const monitor = clientStore.call?.monitor;
+		const newPcDetails: { peerConnectionId: string, reasons: string }[] = [];
 
+		const newScores = [];
+		for (const pc of monitor?.peerConnections ?? []) {
+			newScores.push({
+				peerConnectionId: pc.peerConnectionId,
+				score: `${pc.attachments?.direction} peer connection score: ${pc.score}`
+			});
+			const subtractions = (pc.calculatedStabilityScore.reasons as DefaultScoreCalculatorSubtractions);
+			const reasons = Object.keys(subtractions ?? {});
+
+			if (0 < reasons.length) {
+				newPcDetails.push({
+					peerConnectionId: pc.peerConnectionId,
+					reasons: reasons.join(', ')
+				});
+			}
+			
+		}
+		setClientScore(monitor?.score);
+		setPcScores(newScores);
+		setPcScoreDetails(newPcDetails);
+	};
 	onMount(() => {
 		produceMedia().catch((e) => setError(`${e}`));
-	});
+		clientStore.call?.monitor.on('stats-collected', statsListener);
 
+	});
 	return (
 		<Grid container spacing={2}>
 			<Show when={error()}>
@@ -57,6 +87,12 @@ const VideoCall: Component = () => {
 			<Box title={'Local Client'} full={true}>
 				<div><b>ClientId</b>: {clientStore.call?.config.clientId}</div>
 				<div><b>UserId</b>: {clientStore.userId}</div>
+				<div><b>ClientScore: </b> {clientScore()}</div>
+				<For each={pcScores()}>{(v) => (
+					<InfoBox 
+						value={v.score} popoverText={pcScoreDetails()?.find(d => d.peerConnectionId === v.peerConnectionId)?.reasons}/>
+				)}
+				</For>
 				{/* <div><b>Inner MediaServer IP</b>: {clientStore.innerServerIp}</div> */}
 				{/* <div><b>Inner MediaServer IP</b>: {clientStore.call?.monitor.peerConnections[0].usingTURN}</div> */}
 				<LocalClientVideo showControls={true} />

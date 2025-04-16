@@ -3,7 +3,7 @@ import solidPlugin from 'vite-plugin-solid';
 
 export default defineConfig({ 
 	plugins: [ solidPlugin() ], 
-	server: { port: 3000 }, 
+	server: { port: 3100 }, 
 	build: { 
 		outDir: 'build',
 		target: 'esnext' 
@@ -11,7 +11,8 @@ export default defineConfig({
 	optimizeDeps: { 
 		exclude: [
 			'fsevents',
-			'@observertc/client-monitor-js'
+			'@observertc/client-monitor-js',
+			// '@huddle01/observer-client-sdk'
 		] 
 	},
 	// https://vitejs.dev/config/

@@ -1,17 +1,17 @@
-import { ClientContext } from "../common/ClientContext";
+import { CloudSfu } from "@l7mp/cloud-sfu-client";
 import { createLogger } from "../common/logger";
-import { MediasoupService } from "../services/MediasoupService"
 import { ClientMessageContext, ClientMessageListener } from "./ClientMessageListener"
 
 const logger = createLogger('ControlConsumerNotificationListener');
 
 export type ControlConsumerNotificationListenerContext = {
-	mediasoupService: MediasoupService,
+	// mediasoupService: MediasoupService,
+	cloudSfu: CloudSfu,
 }
 
 export function createControlConsumerNotificationListener(listenerContext: ControlConsumerNotificationListenerContext): ClientMessageListener {
 	const { 
-		mediasoupService,
+		cloudSfu,
 	} = listenerContext;
 
 	const result = async (messageContext: ClientMessageContext) => {
@@ -22,13 +22,15 @@ export function createControlConsumerNotificationListener(listenerContext: Contr
 
 		if (request.type !== 'control-consumer-notification') {
 			return logger.warn(`Invalid message type ${request.type}`);
-		} else if (!client?.mediaConsumers.has(request.consumerId)) {
-			return logger.warn(`Consumer ${request.consumerId} not found for client ${client.clientId}`);
 		}
+
+		const router = cloudSfu.routers.get(client.routerId ?? '');
+
+		if (!router) return logger.warn(`Router ${client.routerId} not found`);
 		
-		const consumer = mediasoupService.mediaConsumers.get(request.consumerId);
+		const consumer = router.mediaConsumers.get(request.consumerId);
 		if (!consumer) {
-			return logger.warn(`Consumer ${request.consumerId} not found`);
+			return logger.warn(`Consumer ${request.consumerId} not found for router %s, %s`, client.routerId, [...router.mediaConsumers.keys()]);
 		}
 
 		logger.debug(`Client ${client.clientId} controlling consumer ${consumer.id}. request: %o`, request);

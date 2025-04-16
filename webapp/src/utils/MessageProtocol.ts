@@ -69,6 +69,7 @@ export type JoinCallResponsePayload = {
     clientCreatedServerTimestamp: number,
     clientMaxLifetimeInMs?: number,
     innerServerIp: string,
+    observerAccessToken?: string,
 }
 
 export class CreateProducerRequest {

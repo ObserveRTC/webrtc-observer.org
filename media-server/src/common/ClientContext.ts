@@ -1,8 +1,7 @@
 import WebSocket from 'ws';
-import * as mediasoup from 'mediasoup';
 import { ClientMessage } from '../protocols/MessageProtocol';
 import { createLogger } from './logger';
-import { ClientSampleDecoder } from '@observertc/samples-decoder';
+import { WebRtcTransport } from '@l7mp/cloud-sfu-client';
 
 const logger = createLogger('Client');
 
@@ -12,8 +11,8 @@ export type ClientContext = {
 	roomId: string,
 	callId: string,
 	clientId: string,
-	sndTransport?: mediasoup.types.WebRtcTransport;
-	rcvTransport?: mediasoup.types.WebRtcTransport;
+	sndTransport?: WebRtcTransport;
+	rcvTransport?: WebRtcTransport;
 	userId: string,
 	webSocket: WebSocket,
 	mediaProducers: Set<string>;

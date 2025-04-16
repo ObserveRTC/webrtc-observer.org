@@ -1,5 +1,5 @@
 import * as http from 'http';
-import { WebSocketServer, WebSocket } from 'ws';
+import { WebSocketServer } from 'ws';
 import { createLogger } from "./common/logger";
 import url from 'url';
 import { ClientContext } from './common/ClientContext';

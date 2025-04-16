@@ -4,8 +4,6 @@ import { ClientContext } from '../common/ClientContext';
 import { ControlConsumerNotification } from '../protocols/MessageProtocol';
 import dns from 'dns';
 import os from 'os';
-import { cmpUuids } from '../common/utils';
-import { WebRtcTransport } from 'mediasoup/node/lib/types';
 import { EventEmitter } from 'stream';
 
 const logger = createLogger('MediasoupService');
@@ -329,53 +327,54 @@ export class MediasoupService extends EventEmitter<MediasoupServiceEventMap> {
 	}
 
 	public async consumeMediaProducer(producerId: string, consumingClient: ClientContext): Promise<mediasoup.types.Consumer> {
-		const mediaProducer = this.mediaProducers.get(producerId) ?? (await this._pipedMediaProducer.get(producerId));
-		logger.info(`Attempt to consume media producer ${mediaProducer?.id} to client ${consumingClient.clientId}`);
+		throw new Error('Not implemented');
+		// const mediaProducer = this.mediaProducers.get(producerId) ?? (await this._pipedMediaProducer.get(producerId));
+		// logger.info(`Attempt to consume media producer ${mediaProducer?.id} to client ${consumingClient.clientId}`);
 
-		if (!mediaProducer || !consumingClient) {
-			throw new Error(`Media producer ${producerId} or consuming client ${consumingClient.clientId} not found`);
-		} else if (consumingClient.rcvTransport === undefined) {
-			throw new Error(`Client ${consumingClient.clientId} has no receiving transport`);
-		}
+		// if (!mediaProducer || !consumingClient) {
+		// 	throw new Error(`Media producer ${producerId} or consuming client ${consumingClient.clientId} not found`);
+		// } else if (consumingClient.rcvTransport === undefined) {
+		// 	throw new Error(`Client ${consumingClient.clientId} has no receiving transport`);
+		// }
 		
 
-		const router = this.routers.get(mediaProducer.appData.routerId);
-		if (!router) {
-			throw new Error(`Router ${mediaProducer.appData.routerId} not found`);
-		}
+		// const router = this.routers.get(mediaProducer.appData.routerId);
+		// if (!router) {
+		// 	throw new Error(`Router ${mediaProducer.appData.routerId} not found`);
+		// }
 
-		const consumer = await consumingClient.rcvTransport.consume<ConsumerAppData>({
-			producerId: mediaProducer.id,
-			rtpCapabilities: router.rtpCapabilities,
-			paused: mediaProducer.kind === 'video',
-			appData: {
-				remoteClosed: false,
-			}
-		});
-		const onProducerPause = () => consumingClient.send(new ControlConsumerNotification(
-			consumer.id,
-			'producerPaused',
-		));
-		const onProducerResume = () => consumingClient.send(new ControlConsumerNotification(
-			consumer.id,
-			'producerResume',
-		));
+		// const consumer = await consumingClient.rcvTransport.consume<ConsumerAppData>({
+		// 	producerId: mediaProducer.id,
+		// 	rtpCapabilities: router.rtpCapabilities,
+		// 	paused: mediaProducer.kind === 'video',
+		// 	appData: {
+		// 		remoteClosed: false,
+		// 	}
+		// });
+		// const onProducerPause = () => consumingClient.send(new ControlConsumerNotification(
+		// 	consumer.id,
+		// 	'producerPaused',
+		// ));
+		// const onProducerResume = () => consumingClient.send(new ControlConsumerNotification(
+		// 	consumer.id,
+		// 	'producerResume',
+		// ));
 
-		consumer.observer.once('close', () => {
-			mediaProducer.observer.off('pause', onProducerPause);
-			mediaProducer.observer.off('resume', onProducerResume);
+		// consumer.observer.once('close', () => {
+		// 	mediaProducer.observer.off('pause', onProducerPause);
+		// 	mediaProducer.observer.off('resume', onProducerResume);
 
-			if (!consumer.appData.remoteClosed) {
-				consumingClient.send(new ControlConsumerNotification(
-					consumer.id,
-					'close',
-				));
-			}
-		});
-		mediaProducer.observer.on('pause', onProducerPause);
-		mediaProducer.observer.on('resume', onProducerResume);
+		// 	if (!consumer.appData.remoteClosed) {
+		// 		consumingClient.send(new ControlConsumerNotification(
+		// 			consumer.id,
+		// 			'close',
+		// 		));
+		// 	}
+		// });
+		// mediaProducer.observer.on('pause', onProducerPause);
+		// mediaProducer.observer.on('resume', onProducerResume);
 
-		return consumer;
+		// return consumer;
 	};
 
 	private async _pipeToRemoteRouter(options: { remoteRouterId: string, localRouterId: string }): Promise<mediasoup.types.PipeTransport<PipeTransportAppData>> {

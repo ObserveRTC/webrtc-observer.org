@@ -1,23 +1,4 @@
-import {
-	CertificateEntry,
-	ClientMonitor,
-	CodecEntry,
-	ContributingSourceEntry,
-	DataChannelEntry,
-	IceCandidatePairEntry,
-	IceServerEntry,
-	InboundRtpEntry,
-	MediaSourceEntry,
-	OutboundRtpEntry,
-	PeerConnectionEntry,
-	RemoteInboundRtpEntry,
-	RemoteOutboundRtpEntry,
-	SctpTransportEntry,
-	SenderEntry,
-	TransceiverEntry,
-	TransportEntry,
-} from '@observertc/client-monitor-js';
-  
+import { CertificateMonitor, ClientMonitor, CodecMonitor, DataChannelMonitor, IceCandidateMonitor, IceCandidatePairMonitor, IceTransportMonitor, InboundRtpMonitor, InboundTrackMonitor, MediaPlayoutMonitor, MediaSourceMonitor, OutboundRtpMonitor, OutboundTrackMonitor, PeerConnectionMonitor, PeerConnectionTransportMonitor, RemoteInboundRtpMonitor, RemoteOutboundRtpMonitor } from '@observertc/client-monitor-js';
 import { 
 	ShowObjectProps, 
 	ShowObjectAccessorArrayItem, 
@@ -25,7 +6,6 @@ import {
 	ShowObjectProperties
 } from '../components/ClientMonitor/ShowObject';
 import { createSignal } from 'solid-js';
-import { AudioPlayoutEntry, LocalCandidateEntry, ReceiverEntry, RemoteCandidateEntry } from '@observertc/client-monitor-js/lib/entries/StatsEntryInterfaces';
 
 // eslint-disable-next-line no-unused-vars
 // function getResultOrEmpty<T>(accessor: (i: T) => ShowObjectAccessor, value?: T): ShowObjectAccessor {
@@ -39,6 +19,20 @@ import { AudioPlayoutEntry, LocalCandidateEntry, ReceiverEntry, RemoteCandidateE
 // 	});
 // }
 
+function getObjectFields<T extends Object>(object: T, ...except: (keyof T)[])  {
+	const keys = Object.keys(object).filter((key) => !except.includes(key as keyof T));
+	const result: Record<string, unknown> = {};
+	for (const key of keys) {
+		if (key[0] === '_') continue;
+		if (key.startsWith('detectors') && (object as any)[key]?.constructor.name === 'Detectors') continue;
+		if (key.startsWith('mapped') && (object as any)[key] instanceof Map) continue;
+		result[key] = (object as any)[key];
+	}
+
+	return result;
+}
+
+// eslint-disable-next-line no-unused-vars
 function getResultOrEmpty<T>(accessor: (i: T) => ShowObjectAccessor, value?: T): ShowObjectAccessor {
 	return () => {
 		if (value) return accessor(value)();
@@ -67,74 +61,37 @@ function getPrimitiveProps(value: number | undefined | null | string): ShowObjec
 
 export function createClientMonitorProps(monitor: ClientMonitor): ShowObjectProps {
 	const [monitorProps, setMonitorProps] = createSignal<ShowObjectProperties & object>({});
-
+	
 	const listener = () => {
 		setMonitorProps({
-			browser: monitor.browser,
-			operatingSystem: monitor.operationSystem,
-			engine: monitor.engine,
-			platform: monitor.platform,
-			created: monitor.created,
 			sendingAudioBitrate: monitor.sendingAudioBitrate,
 			sendingVideoBitrate: monitor.sendingVideoBitrate,
 			receivingAudioBitrate: monitor.receivingAudioBitrate,
 			receivingVideoBitrate: monitor.receivingVideoBitrate,
 
-			totalInboundPacketsLost: monitor.totalInboundPacketsLost,
-			totalInboundPacketsReceived: monitor.totalInboundPacketsReceived,
-			totalOutboundPacketsSent: monitor.totalOutboundPacketsSent,
-			totalOutboundPacketsReceived: monitor.totalOutboundPacketsReceived,
-			totalOutboundPacketsLost: monitor.totalOutboundPacketsLost,
-			totalDataChannelBytesSent: monitor.totalDataChannelBytesSent,
-			totalDataChannelBytesReceived: monitor.totalDataChannelBytesReceived,
-			totalSentAudioBytes: monitor.totalSentAudioBytes,
-			totalSentVideoBytes: monitor.totalSentVideoBytes,
-			totalReceivedAudioBytes: monitor.totalReceivedAudioBytes,
-			totalReceivedVideoBytes: monitor.totalReceivedVideoBytes,
 			totalAvailableIncomingBitrate: monitor.totalAvailableIncomingBitrate,
 			totalAvailableOutgoingBitrate: monitor.totalAvailableOutgoingBitrate,
 
-
-			deltaInboundPacketsLost: monitor.deltaInboundPacketsLost,
-			deltaInboundPacketsReceived: monitor.deltaInboundPacketsReceived,
-			deltaOutboundPacketsSent: monitor.deltaOutboundPacketsSent,
-			deltaOutboundPacketsReceived: monitor.deltaOutboundPacketsReceived,
-			deltaOutboundPacketsLost: monitor.deltaOutboundPacketsLost,
-			deltaDataChannelBytesSent: monitor.deltaDataChannelBytesSent,
-			deltaDataChannelBytesReceived: monitor.deltaDataChannelBytesReceived,
-			deltaSentAudioBytes: monitor.deltaSentAudioBytes,
-			deltaSentVideoBytes: monitor.deltaSentVideoBytes,
-			deltaReceivedAudioBytes: monitor.deltaReceivedAudioBytes,
-			deltaReceivedVideoBytes: monitor.deltaReceivedVideoBytes,
-
 			avgRttInSec: monitor.avgRttInSec,
-			highestSeenSendingBitrate: monitor.highestSeenSendingBitrate,
-			highestSeenReceivingBitrate: monitor.highestSeenReceivingBitrate,
-			highestSeenAvailableOutgoingBitrate: monitor.highestSeenAvailableOutgoingBitrate,
-			highestSeenAvailableIncomingBitrate: monitor.highestSeenAvailableIncomingBitrate,
-			sendingFractionLost: monitor.sendingFractionLost,
-			receivingFractionLost: monitor.receivingFractionLost,
+			score: monitor.score,
 
 			peerConnections: createPeerConnectionArrayProps(monitor.peerConnections),
+			certificates: createCertificateArrayProps(monitor.certificates),
 			codecs: createCodecArrayProps(monitor.codecs),
+			dataChannels: createDataChannelArrayProps(monitor.dataChannels),
+			iceCandidatePairs: createIceCandidatePairArrayProps(monitor.iceCandidatePairs),
+			iceCandidates: createIceCandidateArrayProps(monitor.iceCandidates),
+			iceTransports: createIceTransportArrayProps(monitor.iceTransports),
 			inboundRtps: createInboundRtpArrayProps(monitor.inboundRtps),
+			mediaPlayouts: createMediaPlayoutArrayProps(monitor.mediaPlayouts),
+			mediaSources: createMediaSourceArrayProps(monitor.mediaSources),
 			outboundRtps: createOutboundRtpArrayProps(monitor.outboundRtps),
 			remoteInboundRtps: createRemoteInboundRtpArrayProps(monitor.remoteInboundRtps),
 			remoteOutboundRtps: createRemoteOutboundRtpArrayProps(monitor.remoteOutboundRtps),
-			mediaSources: createMediaSourceArrayProps(monitor.mediaSources),
-			dataChannels: createDataChannelArrayProps(monitor.dataChannels),
-			transports: createTransportArrayProps(monitor.transports),
-			iceCandidatePairs: createIceCandidatePairArrayProps(monitor.iceCandidatePairs),
-			iceLocalCandidates: createIceLocalCandidateArrayProps(monitor.iceLocalCandidates),
-			iceRemoteCandidates: createIceRemoteCandidateArrayProps(monitor.iceRemoteCandidates),
-			transceivers: createTransceiverArrayProps(monitor.transceivers),
-			senders: createSenderArrayProps(monitor.senders),
-			sctpTransports: createSctpTransportsArratProps(monitor.sctpTransports),
-			certificates: createCertificateArrayProps(monitor.certificates),
-			iceServers: createIceServerArrayProps(monitor.iceServers),
-			contributingSources: createContributingSourcesArrayProps(monitor.contributingSources),
-			receivers: createReceiverArrayProps(monitor.receivers),
-			// audioPlayouts: createAudioPlayoutArrayProps(monitor.audioPlayouts),
+			// tracks: [
+			// 	...createInboundTrackArrayProps((monitor.tracks.filter((track) => track.direction === 'inbound') as InboundTrackMonitor[])),
+			// 	...createOutboundTrackArrayProps((monitor.tracks.filter((track) => track.direction === 'outbound') as OutboundTrackMonitor[]))
+			// ]
             
 		});
 	};
@@ -149,7 +106,7 @@ export function createClientMonitorProps(monitor: ClientMonitor): ShowObjectProp
 	};
 }
 
-function createPeerConnectionArrayProps(peerConnections: PeerConnectionEntry[]): ShowObjectAccessorArrayItem[] {
+function createPeerConnectionArrayProps(peerConnections: PeerConnectionMonitor[]): ShowObjectAccessorArrayItem[] {
 	return peerConnections.map((pc) => {
 		return {
 			key: pc.peerConnectionId,
@@ -158,7 +115,7 @@ function createPeerConnectionArrayProps(peerConnections: PeerConnectionEntry[]):
 	});
 }
 
-function createPeerConnectionProps(peerConnection: PeerConnectionEntry): ShowObjectAccessor {
+function createPeerConnectionProps(peerConnection: PeerConnectionMonitor): ShowObjectAccessor {
 	const [peerConnectionProps, setPeerConnectionProps] = createSignal<ShowObjectProperties>({});
 
 	// const codecs = [...peerConnection.codecs()];
@@ -166,66 +123,58 @@ function createPeerConnectionProps(peerConnection: PeerConnectionEntry): ShowObj
 	// console.warn('codecs', codecs);
 
 	setPeerConnectionProps({
-		peerConnectionId: peerConnection.peerConnectionId,
-		statsId: peerConnection.statsId,
-		label: peerConnection.label,
-		usingTCP: peerConnection.usingTCP,
-		usingTURN: peerConnection.usingTURN,
+		...getObjectFields(peerConnection, 'parent', 'calculatedStabilityScore', 'detectors'),
+		// peerConnectionId: peerConnection.peerConnectionId,
+		// usingTCP: peerConnection.usingTCP,
+		// usingTURN: peerConnection.usingTURN,
 
-		totalInboundPacketsLost: peerConnection.totalInboundPacketsLost,
-		totalInboundPacketsReceived: peerConnection.totalInboundPacketsReceived,
-		totalOutboundPacketsLost: peerConnection.totalOutboundPacketsLost,
-		totalOutboundPacketsReceived: peerConnection.totalOutboundPacketsReceived,
-		totalOutboundPacketsSent: peerConnection.totalOutboundPacketsSent,
-		totalSentAudioBytes: peerConnection.totalSentAudioBytes,
-		totalSentVideoBytes: peerConnection.totalSentVideoBytes,
-		totalReceivedAudioBytes: peerConnection.totalReceivedAudioBytes,
-		totalReceivedVideoBytes: peerConnection.totalReceivedVideoBytes,
-		totalDataChannelBytesReceived: peerConnection.totalDataChannelBytesReceived,
-		totalDataChannelBytesSent: peerConnection.totalDataChannelBytesSent,
+		// totalInboundPacketsLost: peerConnection.totalInboundPacketsLost,
+		// totalInboundPacketsReceived: peerConnection.totalInboundPacketsReceived,
+		// totalOutboundPacketsLost: peerConnection.totalOutboundPacketsLost,
+		// totalOutboundPacketsReceived: peerConnection.totalOutboundPacketsReceived,
+		// totalOutboundPacketsSent: peerConnection.totalOutboundPacketsSent,
+		// totalSentAudioBytes: peerConnection.totalSentAudioBytes,
+		// totalSentVideoBytes: peerConnection.totalSentVideoBytes,
+		// totalReceivedAudioBytes: peerConnection.totalReceivedAudioBytes,
+		// totalReceivedVideoBytes: peerConnection.totalReceivedVideoBytes,
+		// totalDataChannelBytesReceived: peerConnection.totalDataChannelBytesReceived,
+		// totalDataChannelBytesSent: peerConnection.totalDataChannelBytesSent,
 
-		deltaInboundPacketsLost: peerConnection.deltaInboundPacketsLost,
-		deltaInboundPacketsReceived: peerConnection.deltaInboundPacketsReceived,
-		deltaOutboundPacketsLost: peerConnection.deltaOutboundPacketsLost,
-		deltaOutboundPacketsReceived: peerConnection.deltaOutboundPacketsReceived,
-		deltaOutboundPacketsSent: peerConnection.deltaOutboundPacketsSent,
-		deltaSentAudioBytes: peerConnection.deltaSentAudioBytes,
-		deltaSentVideoBytes: peerConnection.deltaSentVideoBytes,
-		deltaReceivedAudioBytes: peerConnection.deltaReceivedAudioBytes,
-		deltaReceivedVideoBytes: peerConnection.deltaReceivedVideoBytes,
-		deltaDataChannelBytesSent: peerConnection.deltaDataChannelBytesSent,
-		deltaDataChannelBytesReceived: peerConnection.deltaDataChannelBytesReceived,
-		avgRttInS: peerConnection.avgRttInS,
+		// deltaAudioBytesReceived: peerConnection.ΔaudioBytesReceived,
+		// deltaAudioBytesSent: peerConnection.ΔaudioBytesSent,
+		// deltaVideoBytesReceived: peerConnection.ΔvideoBytesReceived,
+		// deltaVideoBytesSent: peerConnection.ΔvideoBytesSent,
+		// deltaDataChannelBytesReceived: peerConnection.ΔdataChannelBytesReceived,
+		// deltaDataChannelBytesSent: peerConnection.ΔdataChannelBytesSent,
+		// ΔinboundPacketsLost: peerConnection.ΔinboundPacketsLost,
+		// ΔinboundPacketsReceived: peerConnection.ΔinboundPacketsReceived,
+		// ΔoutboundPacketsLost: peerConnection.ΔoutboundPacketsLost,
+		// ΔoutboundPacketsReceived: peerConnection.ΔoutboundPacketsReceived,
+		// ΔoutboundPacketsSent: peerConnection.ΔoutboundPacketsSent,
 
-		sendingAudioBitrate: peerConnection.sendingAudioBitrate,
-		sendingVideoBitrate: peerConnection.sendingVideoBitrate,
-		sendingFractionalLoss: peerConnection.sendingFractionalLoss,
-		receivingAudioBitrate: peerConnection.receivingAudioBitrate,
-		receivingVideoBitrate: peerConnection.receivingVideoBitrate,
-		receivingFractionalLoss: peerConnection.receivingFractionalLoss,
+		// avgRttInSec: peerConnection.avgRttInSec,
 
-		connectionState: peerConnection.connectionState,
-		connectionEstablishedDurationInMs:  peerConnection.connectionEstablishedDurationInMs,
+		score: peerConnection.score,
+		calculatedStabilityScore: peerConnection.calculatedStabilityScore,
 
-
-		'codecs': createCodecArrayProps([...peerConnection.codecs()]),
-		'inboundRtps()': createInboundRtpArrayProps([...peerConnection.inboundRtps()]),
-		'outboundRtps()': createOutboundRtpArrayProps([...peerConnection.outboundRtps()]),
-		'remoteInboundRtps()': createRemoteInboundRtpArrayProps([...peerConnection.remoteInboundRtps()]),
-		'remoteOutboundRtps()': createRemoteOutboundRtpArrayProps([...peerConnection.remoteOutboundRtps()]),
-		'mediaSources()': createMediaSourceArrayProps([...peerConnection.mediaSources()]),
-		'dataChannels()': createDataChannelArrayProps([...peerConnection.dataChannels()]),
-		'transports()': createTransportArrayProps([...peerConnection.transports()]),
-		'iceCandidatePairs()': createIceCandidatePairArrayProps([...peerConnection.iceCandidatePairs()]),
-		'transceivers()': createTransceiverArrayProps([...peerConnection.transceivers()]),
-		'senders()': createSenderArrayProps([...peerConnection.senders()]),
-		'sctpTransports()': createSctpTransportsArratProps([...peerConnection.sctpTransports()]),
-		'certificates()': createCertificateArrayProps([...peerConnection.certificates()]),
-		'iceServers()': createIceServerArrayProps([...peerConnection.iceServers()]),
-		'contributingSources()': createContributingSourcesArrayProps([...peerConnection.contributingSources()]),
-		'receivers()': createReceiverArrayProps([...peerConnection.receivers()]),
-		'audioPlayouts()': createAudioPlayoutArrayProps([...peerConnection.audioPlayouts()]),
-		
+		certificates: createCertificateArrayProps(peerConnection.certificates),
+		codecs: createCodecArrayProps(peerConnection.codecs),
+		dataChannels: createDataChannelArrayProps(peerConnection.dataChannels),
+		iceCandidatePairs: createIceCandidatePairArrayProps(peerConnection.iceCandidatePairs),
+		iceCandidates: createIceCandidateArrayProps(peerConnection.iceCandidates),
+		iceTransports: createIceTransportArrayProps(peerConnection.iceTransports),
+		inboundRtps: createInboundRtpArrayProps(peerConnection.inboundRtps),
+		mediaPlayouts: createMediaPlayoutArrayProps(peerConnection.mediaPlayouts),
+		mediaSources: createMediaSourceArrayProps(peerConnection.mediaSources),
+		outboundRtps: createOutboundRtpArrayProps(peerConnection.outboundRtps),
+		peerConnectionTransports: createPeerConnectionTransportArrayProps(peerConnection.peerConnectionTransports),
+		remoteInboundRtps: createRemoteInboundRtpArrayProps(peerConnection.remoteInboundRtps),
+		remoteOutboundRtps: createRemoteOutboundRtpArrayProps(peerConnection.remoteOutboundRtps),
+		selectedIceCandidatePairs: createIceCandidatePairArrayProps(peerConnection.selectedIceCandidatePairs),
+		// tracks: [
+		// 	...createInboundTrackArrayProps((peerConnection.tracks.filter((track) => track.direction === 'inbound') as InboundTrackMonitor[])),
+		// 	...createOutboundTrackArrayProps((peerConnection.tracks.filter((track) => track.direction === 'outbound') as OutboundTrackMonitor[]))
+		// ]
 	});
 
 	// monitor.on('stats-collected', listener);
@@ -244,23 +193,48 @@ function createPeerConnectionProps(peerConnection: PeerConnectionEntry): ShowObj
 // 	});
 // }
 
+function createCertificateArrayProps(monitors: CertificateMonitor[]): ShowObjectAccessorArrayItem[] {
+	return monitors.map((monitor) => {
+		return {
+			key: monitor.id,
+			accessor: createCertificateProps(monitor)
+		};
+	});
+}
 
-function createCodecArrayProps(codecs: CodecEntry[]): ShowObjectAccessorArrayItem[] {
+function createCertificateProps(monitor: CertificateMonitor): ShowObjectAccessor {
+	const [monitorProps, setMonitorProps] = createSignal<ShowObjectProperties>({});
+
+	setMonitorProps({
+		...getObjectFields(monitor, 'visited'),
+
+		// Peer connection info
+		getPeerConnection: getResultOrEmpty(createPeerConnectionProps, monitor.getPeerConnection()),
+	});
+
+	return () => ({
+		properties: monitorProps,
+		cleanup: () => setMonitorProps({})
+	});
+}
+
+
+function createCodecArrayProps(codecs: CodecMonitor[]): ShowObjectAccessorArrayItem[] {
 	return codecs.map((codec) => {
 		return {
-			key: codec.statsId,
+			key: codec.id,
 			accessor: createCodecProps(codec)
 		};
 	});
 }
 
-function createCodecProps(codec: CodecEntry): ShowObjectAccessor {
+function createCodecProps(codec: CodecMonitor): ShowObjectAccessor {
 	const [codecsProps, setCodecsProps] = createSignal<ShowObjectProperties>({});
-
+	
 	setCodecsProps({
-		stats: codec.stats,
+		...getObjectFields(codec, 'visited'),
 
-		getTransport: getResultOrEmpty(createTransportProps, codec.getTransport()),
+		getIceTransport: getResultOrEmpty(createIceTransportProps, codec.getIceTransport()),
 		getPeerConnection: getResultOrEmpty(createPeerConnectionProps, codec.getPeerConnection())
 	});
 
@@ -270,199 +244,22 @@ function createCodecProps(codec: CodecEntry): ShowObjectAccessor {
 	});
 }
 
-function createInboundRtpArrayProps(inboundRtps: InboundRtpEntry[]): ShowObjectAccessorArrayItem[] {
-	return inboundRtps.map((inboundRtp) => {
-		return {
-			key: inboundRtp.statsId,
-			accessor: createInboundRtpProps(inboundRtp)
-		};
-	});
-}
-
-function createInboundRtpProps(inboundRtp: InboundRtpEntry): ShowObjectAccessor {
-	const [inboundRtpProps, setInboundRtpProps] = createSignal<ShowObjectProperties>({});
-
-	setInboundRtpProps({
-
-		kind: inboundRtp.kind,
-		expectedFrameRate: inboundRtp.expectedFrameRate,
-		sfuStreamId: inboundRtp.sfuStreamId,
-		sfuSinkId: inboundRtp.sfuSinkId,
-		remoteClientId: inboundRtp.remoteClientId,
-		score: inboundRtp.score,
-		avgJitterBufferDelayInMs: inboundRtp.avgJitterBufferDelayInMs,
-		receivingBitrate: inboundRtp.receivingBitrate,
-		receivedBytes: inboundRtp.receivedBytes,
-		lostPackets: inboundRtp.lostPackets,
-		receivedPackets: inboundRtp.receivedPackets,
-		receivedFrames: inboundRtp.receivedFrames,
-		decodedFrames: inboundRtp.decodedFrames,
-		droppedFrames: inboundRtp.droppedFrames,
-		receivedSamples: inboundRtp.receivedSamples,
-		silentConcealedSamples: inboundRtp.silentConcealedSamples,
-		fractionLoss: inboundRtp.fractionLoss,
-		avgRttInS: inboundRtp.avgRttInS,
-		framesPerSecond: inboundRtp.framesPerSecond,
-		fpsVolatility: inboundRtp.fpsVolatility,
-		avgFramesPerSec: inboundRtp.avgFramesPerSec,
-		lastNFramesPerSec: inboundRtp.lastNFramesPerSec,
-		
-		getAudioPlayout: getResultOrEmpty(createAudioPlayoutProps, inboundRtp.getAudioPlayout()),
-		getCodec: getResultOrEmpty(createCodecProps, inboundRtp.getCodec()),
-		getPeerConnection: getResultOrEmpty(createPeerConnectionProps, inboundRtp.getPeerConnection()),
-		getReceiver: getResultOrEmpty(createReceiverProps, inboundRtp.getReceiver()),
-		getRemoteOutboundRtp: getResultOrEmpty(createRemoteOutboundRtpProps, inboundRtp.getRemoteOutboundRtp()),
-		getSsrc: getResultOrEmpty(getPrimitiveProps, inboundRtp.getSsrc()),
-		getTrackId: getResultOrEmpty(getPrimitiveProps, inboundRtp.getTrackId()),
-		getTransport: getResultOrEmpty(createTransportProps, inboundRtp.getTransport()),
-
-		stats: inboundRtp.stats
-	});
-
-	return () => ({
-		properties: inboundRtpProps,
-		cleanup: () => setInboundRtpProps({})
-	});
-}
-
-function createOutboundRtpArrayProps(outboundRtps: OutboundRtpEntry[]): ShowObjectAccessorArrayItem[] {
-	return outboundRtps.map((outboundRtp) => {
-		return {
-			key: outboundRtp.statsId,
-			accessor: createOutboundRtpProps(outboundRtp)
-		};
-	});
-}
-
-function createOutboundRtpProps(outboundRtp: OutboundRtpEntry): ShowObjectAccessor {
-	const [outboundRtpProps, setOutboundRtpProps] = createSignal<ShowObjectProperties>({});
-	
-	setOutboundRtpProps({
-		kind: outboundRtp.kind,
-		sfuStreamId: outboundRtp.sfuStreamId,
-		score: outboundRtp.score,
-		sendingBitrate: outboundRtp.sendingBitrate,
-		sentBytes: outboundRtp.sentBytes,
-		sentPackets: outboundRtp.sentPackets,
-
-		getCodec: getResultOrEmpty(createCodecProps, outboundRtp.getCodec()),
-		getMediaSource: getResultOrEmpty(createMediaSourceProps, outboundRtp.getMediaSource()),
-		getPeerConnection: getResultOrEmpty(createPeerConnectionProps, outboundRtp.getPeerConnection()),
-		getRemoteInboundRtp: getResultOrEmpty(createRemoteInboundRtpProps, outboundRtp.getRemoteInboundRtp()),
-		getSender: getResultOrEmpty(createSenderProps, outboundRtp.getSender()),
-		getSsrc: getResultOrEmpty(getPrimitiveProps, outboundRtp.getSsrc()),
-		getTrackId: getResultOrEmpty(getPrimitiveProps, outboundRtp.getTrackId()),
-		getTransport: getResultOrEmpty(createTransportProps, outboundRtp.getTransport()),
-
-		stats: outboundRtp.stats
-	});
-
-	return () => ({
-		properties: outboundRtpProps,
-		cleanup: () => setOutboundRtpProps({})
-	});
-}
-
-
-function createRemoteInboundRtpArrayProps(remoteInboundRtps: RemoteInboundRtpEntry[]): ShowObjectAccessorArrayItem[] {
-	return remoteInboundRtps.map((remoteInboundRtp) => {
-		return {
-			key: remoteInboundRtp.statsId,
-			accessor: createRemoteInboundRtpProps(remoteInboundRtp)
-		};
-	});
-}
-
-function createRemoteInboundRtpProps(remoteInboundRtp: RemoteInboundRtpEntry): ShowObjectAccessor {
-	const [remoteInboundRtpProps, setRemoteInboundRtpProps] = createSignal<ShowObjectProperties>({});
-
-	setRemoteInboundRtpProps({
-		receivedPackets: remoteInboundRtp.receivedPackets,
-		lostPackets: remoteInboundRtp.lostPackets,
-			
-		getCodec: getResultOrEmpty(createCodecProps, remoteInboundRtp.getCodec()),
-		getOutboundRtp: getResultOrEmpty(createOutboundRtpProps, remoteInboundRtp.getOutboundRtp()),
-		getPeerConnection: getResultOrEmpty(createPeerConnectionProps, remoteInboundRtp.getPeerConnection()),
-		getSsrc: getResultOrEmpty(getPrimitiveProps, remoteInboundRtp.getSsrc()),
-		getTransport: getResultOrEmpty(createTransportProps, remoteInboundRtp.getTransport()),
-
-		stats: remoteInboundRtp.stats
-	});
-
-	return () => ({
-		properties: remoteInboundRtpProps,
-		cleanup: () => setRemoteInboundRtpProps({})
-	});
-}
-
-function createRemoteOutboundRtpArrayProps(remoteOutboundRtps: RemoteOutboundRtpEntry[]): ShowObjectAccessorArrayItem[] {
-	return remoteOutboundRtps.map((remoteOutboundRtp) => {
-		return {
-			key: remoteOutboundRtp.statsId,
-			accessor: createRemoteOutboundRtpProps(remoteOutboundRtp)
-		};
-	});
-}
-
-function createRemoteOutboundRtpProps(remoteOutboundRtp: RemoteOutboundRtpEntry): ShowObjectAccessor {
-	const [remoteOutboundRtpProps, setRemoteOutboundRtpProps] = createSignal<ShowObjectProperties>({});
-	
-	setRemoteOutboundRtpProps({
-		getCodec: getResultOrEmpty(createCodecProps, remoteOutboundRtp.getCodec()),
-		getInboundRtp: getResultOrEmpty(createInboundRtpProps, remoteOutboundRtp.getInboundRtp()),
-		getPeerConnection: getResultOrEmpty(createPeerConnectionProps, remoteOutboundRtp.getPeerConnection()),
-		getSsrc: getResultOrEmpty(getPrimitiveProps, remoteOutboundRtp.getSsrc()),
-		getTransport: getResultOrEmpty(createTransportProps, remoteOutboundRtp.getTransport()),
-
-		stats: remoteOutboundRtp.stats,
-	});
-
-	return () => ({
-		properties: remoteOutboundRtpProps,
-		cleanup: () => setRemoteOutboundRtpProps({})
-	});
-}
-
-function createMediaSourceArrayProps(mediaSources: MediaSourceEntry[]): ShowObjectAccessorArrayItem[] {
-	return mediaSources.map((mediaSource) => {
-		return {
-			key: mediaSource.statsId,
-			accessor: createMediaSourceProps(mediaSource)
-		};
-	});
-}
-
-function createMediaSourceProps(mediaSource: MediaSourceEntry): ShowObjectAccessor {
-	const [mediaSourceProps, setMediaSourceProps] = createSignal<ShowObjectProperties>({});
-
-	setMediaSourceProps({
-		getPeerConnection: getResultOrEmpty(createPeerConnectionProps, mediaSource.getPeerConnection()),
-
-		stats: mediaSource.stats
-	});
-
-	return () => ({
-		properties: mediaSourceProps,
-		cleanup: () => setMediaSourceProps({})
-	});
-}
-
-function createDataChannelArrayProps(dataChannels: DataChannelEntry[]): ShowObjectAccessorArrayItem[] {
+function createDataChannelArrayProps(dataChannels: DataChannelMonitor[]): ShowObjectAccessorArrayItem[] {
 	return dataChannels.map((dataChannel) => {
 		return {
-			key: dataChannel.statsId,
+			key: dataChannel.id,
 			accessor: createDataChannelProps(dataChannel)
 		};
 	});
 }
 
-function createDataChannelProps(dataChannel: DataChannelEntry): ShowObjectAccessor {
+function createDataChannelProps(dataChannel: DataChannelMonitor): ShowObjectAccessor {
 	const [dataChannelProps, setDataChannelProps] = createSignal<ShowObjectProperties>({});
 
 	setDataChannelProps({
-		getPeerConnection: getResultOrEmpty(createPeerConnectionProps, dataChannel.getPeerConnection()),
+		...getObjectFields(dataChannel, 'visited'),
 
-		stats: dataChannel.stats
+		getPeerConnection: getResultOrEmpty(createPeerConnectionProps, dataChannel.getPeerConnection())
 	});
 
 	return () => ({
@@ -471,22 +268,75 @@ function createDataChannelProps(dataChannel: DataChannelEntry): ShowObjectAccess
 	});
 }
 
-function createTransportArrayProps(transports: TransportEntry[]): ShowObjectAccessorArrayItem[] {
-	return transports.map((transport) => {
+function createIceCandidateArrayProps(candidates: IceCandidateMonitor[]): ShowObjectAccessorArrayItem[] {
+	return candidates.map((candidate) => {
 		return {
-			key: transport.statsId,
-			accessor: createTransportProps(transport)
+			key: candidate.id,
+			accessor: createIceCandidateProps(candidate)
 		};
 	});
 }
 
-function createTransportProps(transport: TransportEntry): ShowObjectAccessor {
+function createIceCandidateProps(candidate: IceCandidateMonitor): ShowObjectAccessor {
+	const [candidateProps, setCandidateProps] = createSignal<ShowObjectProperties>({});
+
+	setCandidateProps({
+		...getObjectFields(candidate, 'visited'),
+
+		getIceTransport: getResultOrEmpty(createIceTransportProps, candidate.getIceTransport()),
+		getPeerConnection: getResultOrEmpty(createPeerConnectionProps, candidate.getPeerConnection())
+	});
+
+	return () => ({
+		properties: candidateProps,
+		cleanup: () => setCandidateProps({})
+	});
+}
+
+function createIceCandidatePairArrayProps(pairs: IceCandidatePairMonitor[]): ShowObjectAccessorArrayItem[] {
+	return pairs.map((pair) => {
+		return {
+			key: pair.id,
+			accessor: createIceCandidatePairProps(pair)
+		};
+	});
+}
+
+function createIceCandidatePairProps(pair: IceCandidatePairMonitor): ShowObjectAccessor {
+	const [pairProps, setPairProps] = createSignal<ShowObjectProperties>({});
+
+	setPairProps({
+		...getObjectFields(pair, 'visited'),
+
+		getIceTransport: getResultOrEmpty(createIceTransportProps, pair.getIceTransport()),
+		getPeerConnection: getResultOrEmpty(createPeerConnectionProps, pair.getPeerConnection()),
+		getLocalCandidate: getResultOrEmpty(createIceCandidateProps, pair.getLocalCandidate()),
+		getRemoteCandidate: getResultOrEmpty(createIceCandidateProps, pair.getRemoteCandidate())
+	});
+
+	return () => ({
+		properties: pairProps,
+		cleanup: () => setPairProps({})
+	});
+}
+
+function createIceTransportArrayProps(transports: IceTransportMonitor[]): ShowObjectAccessorArrayItem[] {
+	return transports.map((transport) => {
+		return {
+			key: transport.id,
+			accessor: createIceTransportProps(transport)
+		};
+	});
+}
+
+function createIceTransportProps(transport: IceTransportMonitor): ShowObjectAccessor {
 	const [transportProps, setTransportProps] = createSignal<ShowObjectProperties>({});
 
 	setTransportProps({
-		getPeerConnection: getResultOrEmpty(createPeerConnectionProps, transport.getPeerConnection()),
+		...getObjectFields(transport, 'visited'),
 
-		stats: transport.stats
+		getPeerConnection: getResultOrEmpty(createPeerConnectionProps, transport.getPeerConnection()),
+		getSelectedCandidatePair: getResultOrEmpty(createIceCandidatePairProps, transport.getSelectedCandidatePair())
 	});
 
 	return () => ({
@@ -495,284 +345,244 @@ function createTransportProps(transport: TransportEntry): ShowObjectAccessor {
 	});
 }
 
-function createIceCandidatePairArrayProps(iceCandidatePairs: IceCandidatePairEntry[]): ShowObjectAccessorArrayItem[] {
-	return iceCandidatePairs.map((iceCandidatePair) => {
+function createInboundRtpArrayProps(monitors: InboundRtpMonitor[]): ShowObjectAccessorArrayItem[] {
+	return monitors.map((monitor) => {
 		return {
-			key: iceCandidatePair.statsId,
-			accessor: createIceCandidatePairProps(iceCandidatePair)
+			key: monitor.id,
+			accessor: createInboundRtpProps(monitor)
 		};
 	});
 }
 
-function createIceCandidatePairProps(iceCandidatePair: IceCandidatePairEntry): ShowObjectAccessor {
-	const [iceCandidatePairProps, setIceCandidatePairProps] = createSignal<ShowObjectProperties>({});
+function createInboundRtpProps(monitor: InboundRtpMonitor): ShowObjectAccessor {
+	const [monitorProps, setMonitorProps] = createSignal<ShowObjectProperties>({});
 
-	setIceCandidatePairProps({
+	setMonitorProps({
+		...getObjectFields(monitor, 'visited'),
 
-		getLocalCandidate: getResultOrEmpty(createIceLocalCandidateProps, iceCandidatePair.getLocalCandidate()),
-		getRemoteCandidate: getResultOrEmpty(createIceRemoteCandidateProps, iceCandidatePair.getRemoteCandidate()),
-		getTransport: getResultOrEmpty(createTransportProps, iceCandidatePair.getTransport()),
-		getPeerConnection: getResultOrEmpty(createPeerConnectionProps, iceCandidatePair.getPeerConnection()),
-		
-		stats: iceCandidatePair.stats
+		getPeerConnection: getResultOrEmpty(createPeerConnectionProps, monitor.getPeerConnection()),
+		getRemoteOutboundRtp: getResultOrEmpty(createRemoteOutboundRtpProps, monitor.getRemoteOutboundRtp()),
+		getIceTransport: getResultOrEmpty(createIceTransportProps, monitor.getIceTransport()),
+		getCodec: getResultOrEmpty(createCodecProps, monitor.getCodec()),
+		getMediaPlayout: getResultOrEmpty(createMediaPlayoutProps, monitor.getMediaPlayout()),
+		getTrack: getResultOrEmpty(createInboundTrackProps, monitor.getTrack())
 	});
 
 	return () => ({
-		properties: iceCandidatePairProps,
-		cleanup: () => setIceCandidatePairProps({})
+		properties: monitorProps,
+		cleanup: () => setMonitorProps({})
 	});
 }
 
-function createIceLocalCandidateArrayProps(iceLocalCandidates: LocalCandidateEntry[]): ShowObjectAccessorArrayItem[] {
-	return iceLocalCandidates.map((iceLocalCandidate) => {
+function createInboundTrackArrayProps(monitors: InboundTrackMonitor[]): ShowObjectAccessorArrayItem[] {
+	return monitors.map((monitor) => {
 		return {
-			key: iceLocalCandidate.statsId,
-			accessor: createIceLocalCandidateProps(iceLocalCandidate)
+			key: monitor.track.id,
+			accessor: createInboundTrackProps(monitor)
 		};
 	});
 }
 
-function createIceLocalCandidateProps(iceLocalCandidate: LocalCandidateEntry): ShowObjectAccessor {
-	const [iceLocalCandidateProps, setIceLocalCandidateProps] = createSignal<ShowObjectProperties>({});
+function createInboundTrackProps(monitor: InboundTrackMonitor): ShowObjectAccessor {
+	const [monitorProps, setMonitorProps] = createSignal<ShowObjectProperties>({});
 
-	setIceLocalCandidateProps({
+	setMonitorProps({
+		...getObjectFields(monitor),
 
-		getTransport: getResultOrEmpty(createTransportProps, iceLocalCandidate.getTransport()),
-		getPeerConnection: getResultOrEmpty(createPeerConnectionProps, iceLocalCandidate.getPeerConnection()),
-
-		stats: iceLocalCandidate.stats
+		kind: monitor.kind,
+		bitrate: monitor.bitrate,
+		jitter: monitor.jitter,
+		fractionLost: monitor.fractionLost,
+		getInboundRtp: getResultOrEmpty(createInboundRtpProps, monitor.getInboundRtp()),
+		getPeerConnection: getResultOrEmpty(createPeerConnectionProps, monitor.getPeerConnection())
 	});
 
 	return () => ({
-		properties: iceLocalCandidateProps,
-		cleanup: () => setIceLocalCandidateProps({})
+		properties: monitorProps,
+		cleanup: () => setMonitorProps({})
 	});
 }
 
-function createIceRemoteCandidateArrayProps(iceRemoteCandidates: RemoteCandidateEntry[]): ShowObjectAccessorArrayItem[] {
-	return iceRemoteCandidates.map((iceRemoteCandidate) => {
+function createMediaPlayoutArrayProps(monitors: MediaPlayoutMonitor[]): ShowObjectAccessorArrayItem[] {
+	return monitors.map((monitor) => {
 		return {
-			key: iceRemoteCandidate.statsId,
-			accessor: createIceRemoteCandidateProps(iceRemoteCandidate)
+			key: monitor.id,
+			accessor: createMediaPlayoutProps(monitor)
 		};
 	});
 }
 
-function createIceRemoteCandidateProps(iceRemoteCandidate: RemoteCandidateEntry): ShowObjectAccessor {
-	const [iceRemoteCandidateProps, setIceRemoteCandidateProps] = createSignal<ShowObjectProperties>({});
+function createMediaPlayoutProps(monitor: MediaPlayoutMonitor): ShowObjectAccessor {
+	const [monitorProps, setMonitorProps] = createSignal<ShowObjectProperties>({});
 
-	setIceRemoteCandidateProps({
+	setMonitorProps({
+		...getObjectFields(monitor, 'visited'),
 
-		getTransport: getResultOrEmpty(createTransportProps, iceRemoteCandidate.getTransport()),
-		getPeerConnection: getResultOrEmpty(createPeerConnectionProps, iceRemoteCandidate.getPeerConnection()),
-
-		stats: iceRemoteCandidate.stats
+		getPeerConnection: getResultOrEmpty(createPeerConnectionProps, monitor.getPeerConnection())
 	});
 
 	return () => ({
-		properties: iceRemoteCandidateProps,
-		cleanup: () => setIceRemoteCandidateProps({})
+		properties: monitorProps,
+		cleanup: () => setMonitorProps({})
 	});
 }
-
-function createTransceiverArrayProps(transceivers: TransceiverEntry[]): ShowObjectAccessorArrayItem[] {
-	return transceivers.map((transceiver) => {
+function createMediaSourceArrayProps(monitors: MediaSourceMonitor[]): ShowObjectAccessorArrayItem[] {
+	return monitors.map((monitor) => {
 		return {
-			key: transceiver.statsId,
-			accessor: createTransceieverProps(transceiver)
+			key: monitor.id,
+			accessor: createMediaSourceProps(monitor)
 		};
 	});
 }
 
-function createTransceieverProps(transceiever: TransceiverEntry): ShowObjectAccessor {
-	const [transceieverProps, setTransceieverProps] = createSignal<ShowObjectProperties>({});
+function createMediaSourceProps(monitor: MediaSourceMonitor): ShowObjectAccessor {
+	const [monitorProps, setMonitorProps] = createSignal<ShowObjectProperties>({});
 
-	setTransceieverProps({
+	setMonitorProps({
+		...getObjectFields(monitor, 'visited'),
 
-		getPeerConnection: getResultOrEmpty(createPeerConnectionProps, transceiever.getPeerConnection()),
-		getReceiver: getResultOrEmpty(createReceiverProps, transceiever.getReceiver()),
-		getSender: getResultOrEmpty(createSenderProps, transceiever.getSender()),
-
-		stats: transceiever.stats
+		getPeerConnection: getResultOrEmpty(createPeerConnectionProps, monitor.getPeerConnection()),
+		getTrack: getResultOrEmpty(createOutboundTrackProps, monitor.getTrack())
 	});
 
 	return () => ({
-		properties: transceieverProps,
-		cleanup: () => setTransceieverProps({})
+		properties: monitorProps,
+		cleanup: () => setMonitorProps({})
 	});
 }
 
-function createSenderArrayProps(senders: SenderEntry[]): ShowObjectAccessorArrayItem[] {
-	return senders.map((sender) => {
+function createOutboundRtpArrayProps(monitors: OutboundRtpMonitor[]): ShowObjectAccessorArrayItem[] {
+	return monitors.map((monitor) => {
 		return {
-			key: sender.statsId,
-			accessor: createSenderProps(sender)
+			key: monitor.id,
+			accessor: createOutboundRtpProps(monitor)
 		};
 	});
 }
 
-function createSenderProps(sender: SenderEntry): ShowObjectAccessor {
-	const [senderProps, setSenderProps] = createSignal<ShowObjectProperties>({});
+function createOutboundRtpProps(monitor: OutboundRtpMonitor): ShowObjectAccessor {
+	const [monitorProps, setMonitorProps] = createSignal<ShowObjectProperties>({});
 
-	setSenderProps({
+	setMonitorProps({
+		...getObjectFields(monitor, 'visited'),
 
-		getPeerConnection: getResultOrEmpty(createPeerConnectionProps, sender.getPeerConnection()),
-		
-		stats: sender.stats
+		getPeerConnection: getResultOrEmpty(createPeerConnectionProps, monitor.getPeerConnection()),
+		getMediaSource: getResultOrEmpty(createMediaSourceProps, monitor.getMediaSource()),
+		getCodec: getResultOrEmpty(createCodecProps, monitor.getCodec()),
+		getTrack: getResultOrEmpty(createOutboundTrackProps, monitor.getTrack())
 	});
 
 	return () => ({
-		properties: senderProps,
-		cleanup: () => setSenderProps({})
+		properties: monitorProps,
+		cleanup: () => setMonitorProps({})
 	});
 }
 
-function createSctpTransportsArratProps(sctpTransports: SctpTransportEntry[]): ShowObjectAccessorArrayItem[] {
-	return sctpTransports.map((transport) => {
+function createOutboundTrackArrayProps(monitors: OutboundTrackMonitor[]): ShowObjectAccessorArrayItem[] {
+	return monitors.map((monitor) => {
 		return {
-			key: transport.statsId,
-			accessor: createSctpTransportProps(transport)
+			key: monitor.track.id,
+			accessor: createOutboundTrackProps(monitor)
 		};
 	});
 }
 
-function createSctpTransportProps(sctpTransport: SctpTransportEntry): ShowObjectAccessor {
-	const [sctpTransportProps, setSctpTransportProps] = createSignal<ShowObjectProperties>({});
+function createOutboundTrackProps(monitor: OutboundTrackMonitor): ShowObjectAccessor {
+	const [monitorProps, setMonitorProps] = createSignal<ShowObjectProperties>({});
 
-	setSctpTransportProps({
+	setMonitorProps({
+		...getObjectFields(monitor),
+		score: monitor.score,
+		bitrate: monitor.bitrate,
+		jitter: monitor.jitter,
+		fractionLost: monitor.fractionLost,
+		sendingPacketRate: monitor.sendingPacketRate,
+		remoteReceivedPacketRate: monitor.remoteReceivedPacketRate,
 
-		getPeerConnection: getResultOrEmpty(createPeerConnectionProps, sctpTransport.getPeerConnection()),
+		// Get the peer connection info (relying on the MediaSourceMonitor)
+		getPeerConnection: getResultOrEmpty(createPeerConnectionProps, monitor.getPeerConnection()),
 
-		stats: sctpTransport.stats
 	});
 
 	return () => ({
-		properties: sctpTransportProps,
-		cleanup: () => setSctpTransportProps({})
+		properties: monitorProps,
+		cleanup: () => setMonitorProps({})
 	});
 }
 
-function createCertificateArrayProps(certificates: CertificateEntry[]): ShowObjectAccessorArrayItem[] {
-	return certificates.map((certificate) => {
+function createPeerConnectionTransportArrayProps(monitors: PeerConnectionTransportMonitor[]): ShowObjectAccessorArrayItem[] {
+	return monitors.map((monitor) => {
 		return {
-			key: certificate.statsId,
-			accessor: createCertificateProps(certificate)
+			key: monitor.id,
+			accessor: createPeerConnectionTransportProps(monitor)
 		};
 	});
 }
 
-function createCertificateProps(certificate: CertificateEntry): ShowObjectAccessor {
-	const [certificateProps, setCertificateProps] = createSignal<ShowObjectProperties>({});
+function createPeerConnectionTransportProps(monitor: PeerConnectionTransportMonitor): ShowObjectAccessor {
+	const [monitorProps, setMonitorProps] = createSignal<ShowObjectProperties>({});
 
-	setCertificateProps({
+	setMonitorProps({
+		...getObjectFields(monitor, 'visited'),
 
-		getPeerConnection: getResultOrEmpty(createPeerConnectionProps, certificate.getPeerConnection()),
-
-		stats: certificate.stats
+		// Get peer connection info
+		getPeerConnection: getResultOrEmpty(createPeerConnectionProps, monitor.getPeerConnection()),
 	});
 
 	return () => ({
-		properties: certificateProps,
-		cleanup: () => setCertificateProps({})
+		properties: monitorProps,
+		cleanup: () => setMonitorProps({})
 	});
 }
 
-function createIceServerArrayProps(iceServers: IceServerEntry[]): ShowObjectAccessorArrayItem[] {
-	return iceServers.map((iceServer) => {
+function createRemoteInboundRtpArrayProps(monitors: RemoteInboundRtpMonitor[]): ShowObjectAccessorArrayItem[] {
+	return monitors.map((monitor) => {
 		return {
-			key: iceServer.statsId,
-			accessor: createIceServerProps(iceServer)
+			key: monitor.id,
+			accessor: createRemoteInboundRtpProps(monitor)
 		};
 	});
 }
 
-function createIceServerProps(iceServer: IceServerEntry): ShowObjectAccessor {
-	const [iceServerProps, setIceServerProps] = createSignal<ShowObjectProperties>({});
+function createRemoteInboundRtpProps(monitor: RemoteInboundRtpMonitor): ShowObjectAccessor {
+	const [monitorProps, setMonitorProps] = createSignal<ShowObjectProperties>({});
 
-	setIceServerProps({
+	setMonitorProps({
+		...getObjectFields(monitor, 'visited'),
 
-		getPeerConnection: getResultOrEmpty(createPeerConnectionProps, iceServer.getPeerConnection()),
-
-		stats: iceServer.stats
+		getPeerConnection: getResultOrEmpty(createPeerConnectionProps, monitor.getPeerConnection()),
+		getOutboundRtp: getResultOrEmpty(createOutboundRtpProps, monitor.getOutboundRtp()),
+		getCodec: getResultOrEmpty(createCodecProps, monitor.getCodec()),
 	});
 
 	return () => ({
-		properties: iceServerProps,
-		cleanup: () => setIceServerProps({})
+		properties: monitorProps,
+		cleanup: () => setMonitorProps({})
 	});
 }
 
-function createContributingSourcesArrayProps(contributingSources: ContributingSourceEntry[]): ShowObjectAccessorArrayItem[] {
-	return contributingSources.map((contributingSource) => {
+function createRemoteOutboundRtpArrayProps(monitors: RemoteOutboundRtpMonitor[]): ShowObjectAccessorArrayItem[] {
+	return monitors.map((monitor) => {
 		return {
-			key: contributingSource.statsId,
-			accessor: createContributingSourcesProps(contributingSource)
+			key: monitor.id,
+			accessor: createRemoteOutboundRtpProps(monitor)
 		};
 	});
 }
 
-function createContributingSourcesProps(contributingSources: ContributingSourceEntry): ShowObjectAccessor {
-	const [contributingSourcesProps, setContributingSourcesProps] = createSignal<ShowObjectProperties>({});
+function createRemoteOutboundRtpProps(monitor: RemoteOutboundRtpMonitor): ShowObjectAccessor {
+	const [monitorProps, setMonitorProps] = createSignal<ShowObjectProperties>({});
 
-	setContributingSourcesProps({
+	setMonitorProps({
+		...getObjectFields(monitor, 'visited'),
 
-		getPeerConnection: getResultOrEmpty(createPeerConnectionProps, contributingSources.getPeerConnection()),
-
-		stats: contributingSources.stats
+		getPeerConnection: getResultOrEmpty(createPeerConnectionProps, monitor.getPeerConnection()),
+		getInboundRtp: getResultOrEmpty(createInboundRtpProps, monitor.getInboundRtp()),
+		getCodec: getResultOrEmpty(createCodecProps, monitor.getCodec()),
 	});
 
 	return () => ({
-		properties: contributingSourcesProps,
-		cleanup: () => setContributingSourcesProps({})
-	});
-}
-
-function createAudioPlayoutArrayProps(audioPlayouts: AudioPlayoutEntry[]): ShowObjectAccessorArrayItem[] {
-	return audioPlayouts.map((audioPlayout) => {
-		return {
-			key: audioPlayout.statsId,
-			accessor: createAudioPlayoutProps(audioPlayout)
-		};
-	});
-}
-
-function createAudioPlayoutProps(audioPlayout: AudioPlayoutEntry): ShowObjectAccessor {
-	const [audioPlayoutProps, setAudioPlayoutProps] = createSignal<ShowObjectProperties>({});
-
-	setAudioPlayoutProps({
-
-		getPeerConnection: getResultOrEmpty(createPeerConnectionProps, audioPlayout.getPeerConnection()),
-
-		stats: audioPlayout
-	});
-
-	return () => ({
-		properties: audioPlayoutProps,
-		cleanup: () => setAudioPlayoutProps({})
-	});
-}
-
-function createReceiverArrayProps(receivers: ReceiverEntry[]): ShowObjectAccessorArrayItem[] {
-	return receivers.map((receiver) => {
-		return {
-			key: receiver.statsId,
-			accessor: createReceiverProps(receiver)
-		};
-	});
-}
-
-function createReceiverProps(receiver: ReceiverEntry): ShowObjectAccessor {
-	const [receiverProps, setReceiverProps] = createSignal<ShowObjectProperties>({});
-
-	setReceiverProps({
-
-		getPeerConnection: getResultOrEmpty(createPeerConnectionProps, receiver.getPeerConnection()),
-
-		stats: receiver.stats,
-	});
-
-	return () => ({
-		properties: receiverProps,
-		cleanup: () => setReceiverProps({})
+		properties: monitorProps,
+		cleanup: () => setMonitorProps({})
 	});
 }

@@ -1,7 +1,8 @@
 import { Typography, Popover, SvgIcon } from '@suid/material';
-import { Component, createSignal, JSX, Show } from 'solid-js';
+import { Component, createSignal, JSX, Show, Switch, Match } from 'solid-js';
 
 type BoxProps = {
+	hComponent?: 2 | 3 | 4 | 5 | 6;
 	title?: string;
 	logo?: string;
 	children?: JSX.Element;
@@ -28,14 +29,62 @@ const Box: Component<BoxProps> = (props) => {
 		<div class={divClass}>
 			<div class='flex flex-col bg-white p-4 shadow-md rounded-lg gap-2'>
 				<Show when={props.popoverText} fallback={
-					<h2 class='text-center text-2xl font-bold text-gray-900'>
-						{ props.title }
-					</h2>
+					<Switch>
+						<Match when={props.hComponent === 2 || !props.hComponent}>
+							<h2 class='text-center text-2xl font-bold text-gray-900'>
+								{ props.title }
+							</h2>
+						</Match>
+						<Match when={props.hComponent === 3}>
+							<h3 class='text-center text-2xl font-bold text-gray-900'>
+								{ props.title }
+							</h3>
+						</Match>
+						<Match when={props.hComponent === 4}>
+							<h4 class='text-center text-2xl font-bold text-gray-900'>
+								{ props.title }
+							</h4>
+						</Match>
+						<Match when={props.hComponent === 5}>
+							<h5 class='text-center text-2xl font-bold text-gray-900'>
+								{ props.title }
+							</h5>
+						</Match>
+						<Match when={props.hComponent === 6}>
+							<h6 class='text-center text-2xl font-bold text-gray-900'>
+								{ props.title }
+							</h6>
+						</Match>
+					</Switch>
 				}>
 					<div class="flex items-center justify-between w-full">
-						<h2 class='text-center text-2xl font-bold text-gray-900'>
-							{ props.title }
-						</h2>
+						<Switch>
+							<Match when={props.hComponent === 2 || !props.hComponent}>
+								<h2 class='text-center text-2xl font-bold text-gray-900'>
+									{ props.title }
+								</h2>
+							</Match>
+							<Match when={props.hComponent === 3}>
+								<h3 class='text-center text-2xl font-bold text-gray-900'>
+									{ props.title }
+								</h3>
+							</Match>
+							<Match when={props.hComponent === 4}>
+								<h4 class='text-center text-2xl font-bold text-gray-900'>
+									{ props.title }
+								</h4>
+							</Match>
+							<Match when={props.hComponent === 5}>
+								<h5 class='text-center text-2xl font-bold text-gray-900'>
+									{ props.title }
+								</h5>
+							</Match>
+							<Match when={props.hComponent === 6}>
+								<h6 class='text-center text-2xl font-bold text-gray-900'>
+									{ props.title }
+								</h6>
+							</Match>
+						</Switch>
 						<SvgIcon 
 							height="24px" 
 							viewBox="0 -960 960 960" 

@@ -14,27 +14,24 @@ import { createControlTransportNotificationListener } from "./client-listeners/C
 import { createConnectTransportRequestListener } from "./client-listeners/ConnectTransportRequestListener";
 import { createClientMonitorSampleNotificatinListener } from "./client-listeners/ClientMonitorSampleNotificationListener";
 import { createObserverRequestListener } from "./client-listeners/ObserverRequestListener";
-import { MainEmitter } from "./common/MainEmitter";
 import { createObservedCallLogMonitor } from "./observer-listeners/ObservedCallLogMonitor";
-import { HamokService } from "./services/HamokService";
-import { createPipeTransportListener } from "./hamok-listeners/CreatePipeTransportListener";
-import { createConnectPipeTransportListener } from "./hamok-listeners/ConnectPipeTransportListener";
 import { createRandomCallId } from "./common/utils";
-import { createConsumeMediaProducerListener } from "./hamok-listeners/ConsumeMediaProducerListener";
-import { createPipeMediaProducerToListener } from "./hamok-listeners/PipeMediaProducerToListener";
-import { createPipedMediaConsumerClosedListener } from "./hamok-listeners/PipedMediaConsumerClosedListener";
-import { createGetClientProducersListener } from "./hamok-listeners/GetClientProducersListener";
 import { IntervalTrackerService } from "./services/IntervalTrackerService";
 import { createCloseClientInterval } from "./intervals/CloseClientInterval";
-import { createClientMonitorSampleListener } from "./hamok-listeners/ClientMonitorSampleListener";
-import { createGetCallStatsRequestListener } from "./hamok-listeners/GetCallStatsRequestListener";
-import { ObserverGetCallStatsResponse } from "./protocols/MessageProtocol";
 import { createObservedCallStatsMonitor } from "./observer-listeners/ObservedCallStatsMonitor";
+import { CloudSfu } from "@l7mp/cloud-sfu-client";
+declare global {
+    interface BigInt {
+        toJSON(): Number;
+    }
+}
+
+BigInt.prototype.toJSON = function () { return Number(this) }
 
 const logger = createLogger('main');
 const mediasoupService = new MediasoupService(config.mediasoup);
-const hamokService = new HamokService(config.hamok);
-const mainEmitter = new MainEmitter();
+// const hamokService = new HamokService(config.hamok);
+// const mainEmitter = new MainEmitter();
 const intervalTrackerService = new IntervalTrackerService();
 const observer = createObserver({
     maxCollectingTimeInMs: 1000,
@@ -43,13 +40,30 @@ const observer = createObserver({
     defaultServiceId: 'demo-service',
 });
 const server = new Server(config.server);
+const cloudSfu = new CloudSfu({
+    apiKey: '123456',
+    apiSecret: '123456',
+    baseUrl: 'http://localhost:8080/connect-rpc',
+    orgId: '123456-1234-1234-1234-1234567890',
+    appData: {
+
+    }
+});
+
+// const router = await cloudSfu.createRouter({
+//     preferredRegionIds: []
+// })
+
+// const transport = await router.createWebRtcTransport({
+//     preferredRegionId: ''
+// })
+
 
 server.messageListeners
     .set('join-call-request', createJoinCallRequestListener({
-        hamokService,
-        mediasoupService,
+        cloudSfu,
         maxTransportsPerRouter: config.maxTransportsPerRouter,
-        stunnerAuthUrl: config.stunnerAuthUrl,
+        // stunnerAuthUrl: config.stunnerAuthUrl,
         clientMaxLifetimeInMs: config.maxClientLifeTimeInMins * 60 * 1000,
     }))
     .set('connect-transport-request', createConnectTransportRequestListener({
@@ -58,13 +72,13 @@ server.messageListeners
     .set(
         'control-consumer-notification',
         createControlConsumerNotificationListener({
-            mediasoupService,
+            cloudSfu,
         })
     )
     .set(
         'control-producer-notification',
         createControlProducerNotificationListener({
-            mediasoupService,
+            cloudSfu,
         })
     )
     .set(
@@ -76,86 +90,28 @@ server.messageListeners
     .set(
         'create-producer-request',
         createCreateProducerRequestListener({
-            hamokService,
+            cloudSfu,
             maxProducerPerClients: config.maxProducerPerClients,
-            mediasoupService,
         })
     )
     .set(
         'create-transport-request', 
         createCreateTransportRequestListener({
-            hamokService,
-            mediasoupService,
+            cloudSfu,
             server,
         })
     )
     .set(
         'client-monitor-sample-notification',
         createClientMonitorSampleNotificatinListener({
-            hamokService,
+            cloudSfu,
         })
     )
     .set('observer-request', 
         createObserverRequestListener({
             observer,
-            hamokService,
         })
     )
-    ;
-
-hamokService
-    .on('call-inserted-by-this-instance', call => {
-        if (observer.observedCalls.has(call.callId)) {
-            logger.warn(`Call ${call.callId} already observed`);
-            return;
-        }
-        observer.createObservedCall<{ stats: ObserverGetCallStatsResponse['rooms'][number]['callScores'] }>({
-            roomId: call.roomId,
-            callId: call.callId,
-            serviceId: 'demo-service',
-            appData: {
-                stats: [],
-            },
-        });
-    })
-    .on('call-ended', call => {
-        const routers = [...mediasoupService.routers.values()].filter(router => router.appData.callId === call.callId);
-        routers.forEach(router => router.close());
-
-        observer.observedCalls.get(call.callId)?.close();
-        
-    })
-    .on('client-left', (callId, clientId) => {
-        observer.observedCalls.get(callId)?.clients.get(clientId)?.close();
-    })
-    .on('client-sample', createClientMonitorSampleListener({
-        observer,
-        mainEmitter,
-    }))
-    .on('create-pipe-transport-request', createPipeTransportListener({
-        mediasoupService,
-    }))
-    .on('connect-pipe-transport-request', createConnectPipeTransportListener({
-        mediasoupService
-    }))
-    .on('pipe-media-producer-to', createPipeMediaProducerToListener({
-        mediasoupService,
-        hamokService,
-    }))
-    .on('consume-media-producer', createConsumeMediaProducerListener({
-        mediasoupService,
-        server,
-    }))
-    .on('piped-media-consumer-closed', createPipedMediaConsumerClosedListener({
-        mediasoupService,
-    }))
-    .on('get-client-producers-request', createGetClientProducersListener({
-        mediasoupService,
-        server,
-    }))
-    .on('get-all-call-stats-request', createGetCallStatsRequestListener({
-        observer,
-    }))
     ;
 
 intervalTrackerService.addInterval('closing-clients', createCloseClientInterval({
@@ -168,19 +124,15 @@ observer
     .on('newcall', createObservedCallStatsMonitor())
     ;
 
-mediasoupService.connectRemotePipeTransport = (options) => hamokService.connectRemotePipeTransport(options);
-mediasoupService.createRemotePipeTransport = (options) => hamokService.createRemotePipeTransport(options);
-mediasoupService.pipeRemoteMediaProducerTo = (options) => hamokService.pipeMediaProducerTo(options);
-
 server.createClientContext = async ({ clientId, webSocket, send, callId, userId }): Promise<ClientContext> => {
     let roomId: string | undefined;
     
     if (callId) {
-        const ongoingCall = hamokService.calls.get(callId);
-        if (!ongoingCall) {
-            throw new Error(`Call ${callId} not found`);
-        }
-        roomId = ongoingCall.roomId;
+        // const ongoingCall = hamokService.calls.get(callId);
+        // if (!ongoingCall) {
+            // throw new Error(`Call ${callId} not found`);
+        // }
+        // roomId = ongoingCall.roomId;
     } else {
         [ roomId, callId ] = createRandomCallId();
     }
@@ -206,7 +158,7 @@ server
             client.sndTransport?.close();
             client.rcvTransport?.close();
             
-            hamokService.leaveClient(client.clientId).catch(err => logger.warn(`Error occurred while trying to leave client ${client.clientId} %o`, err));
+            // hamokService.leaveClient(client.clientId).catch(err => logger.warn(`Error occurred while trying to leave client ${client.clientId} %o`, err));
         });
         logger.info(`New client connected with id ${client.clientId}`);
     })
@@ -223,7 +175,7 @@ async function main(): Promise<void> {
         await Promise.allSettled([
             server.stop(),
             mediasoupService.stop(),
-            hamokService.stop(),
+            // hamokService.stop(),
         ]);
         
         process.exit(0);
@@ -232,13 +184,13 @@ async function main(): Promise<void> {
     logger.info("Loaded config %s", getConfigString());
 
     try {
-        require('./appendixes').run(mainEmitter);
+        // require('./appendixes').run(mainEmitter);
         // do stuff
     } catch (ex) {
         logger.warn("Error loading module %o", ex);
     }
 
-    await hamokService.start();
+    // await hamokService.start();
     await mediasoupService.start();
     await server.start();
 
