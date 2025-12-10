@@ -1,4 +1,4 @@
-FROM node:22-alpine3.22 AS builder
+FROM node:24-alpine3.22 AS builder
 
 WORKDIR /app
 
@@ -8,7 +8,7 @@ RUN yarn && yarn build
 RUN npm prune
 
 
-FROM node:22-alpine3.22 AS base
+FROM node:24-alpine3.22 AS base
 
 WORKDIR /app
 COPY --from=builder /app /app
