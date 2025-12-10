@@ -1,15 +1,14 @@
-FROM node:22-alpine AS builder
+FROM node:22-alpine3.22 AS builder
 
 WORKDIR /app
 
-RUN apk add --no-cache python3 py3-pip make cmake linux-headers g++ \
-    && ln -sf python3 /usr/bin/python
+RUN apk add --no-cache python3 py3-pip make cmake linux-headers g++
 COPY . .
 RUN yarn && yarn build
 RUN npm prune
 
 
-FROM node:22-alpine AS base
+FROM node:22-alpine3.22 AS base
 
 WORKDIR /app
 COPY --from=builder /app /app
