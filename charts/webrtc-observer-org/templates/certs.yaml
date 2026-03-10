@@ -13,5 +13,22 @@ spec:
       name: letsencrypt-prod
     solvers:
     - http01:
-        ingress:
-          name: webapp-ingress
+        gatewayHTTPRoute:
+          parentRefs:
+          - name: envoy-gateway
+            namespace: envoy-gateway-system
+            kind: Gateway
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: webapp-tls
+  namespace: envoy-gateway-system
+spec:
+  secretName: webapp-tls
+  issuerRef:
+    name: letsencrypt
+    kind: ClusterIssuer
+  dnsNames:
+  - {{ .Values.webdomain }}
+  - {{ .Values.mediadomain }}

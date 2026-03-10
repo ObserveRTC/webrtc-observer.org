@@ -9,13 +9,31 @@
 
 - cert-manager ([docs](https://cert-manager.io/docs/installation/))
 ```console
-kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.17.1/cert-manager.yaml
+kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.19.3/cert-manager.yaml
+
+kubectl patch deployment cert-manager \
+  -n cert-manager \
+  --type='json' \
+  -p='[{
+    "op": "add",
+    "path": "/spec/template/spec/containers/0/args/-",
+    "value": "--enable-gateway-api"
+  }]'
 ```
 
-- nginx-controller ([docs](https://kubernetes.github.io/ingress-nginx/deploy/#gce-gke))
+- envoy-gateway ([docs](https://gateway.envoyproxy.io/latest/install/install-helm/))
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.12.0/deploy/static/provider/cloud/deploy.yaml
-kubectl patch configmap -n ingress-nginx ingress-nginx-controller -p '{"data":{"allow-snippet-annotations": "true"}}'
+helm install eg oci://docker.io/envoyproxy/gateway-helm --version v1.7.0 -n envoy-gateway-system --create-namespace
+
+kubectl apply -f - <<EOF
+apiVersion: gateway.networking.k8s.io/v1
+kind: GatewayClass
+metadata:
+  name: envoy-gateway
+  namespace: envoy-gateway-system
+spec:
+  controllerName: gateway.envoyproxy.io/gatewayclass-controller
+EOF
 ```
 
 - stunner-gateway-operator ([docs](https://docs.l7mp.io/en/stable/INSTALL/))

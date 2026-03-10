@@ -1,0 +1,134 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: envoy-gateway
+  namespace: envoy-gateway-system
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  gatewayClassName: envoy-gateway
+  listeners:
+  - hostname: {{ .Values.mediadomain }}
+    name: media-webrtc-observer-org-http
+    port: 80
+    protocol: HTTP
+    allowedRoutes:
+      namespaces:
+        from: All
+
+  - hostname: {{ .Values.mediadomain }}
+    name: media-webrtc-observer-org-https
+    port: 443
+    protocol: HTTPS
+    tls:
+      mode: Terminate
+      certificateRefs:
+      - group: ""
+        kind: Secret
+        name: webapp-tls
+    allowedRoutes:
+      namespaces:
+        from: All
+
+  - hostname: {{ .Values.webdomain }}
+    name: www-webrtc-observer-org-http
+    port: 80
+    protocol: HTTP
+    allowedRoutes:
+      namespaces:
+        from: All
+
+  - hostname: {{ .Values.webdomain }}
+    name: www-webrtc-observer-org-https
+    port: 443
+    protocol: HTTPS
+    tls:
+      mode: Terminate
+      certificateRefs:
+      - group: ""
+        kind: Secret
+        name: webapp-tls
+    allowedRoutes:
+      namespaces:
+        from: All
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: media-webrtc-observer-org
+  namespace: default
+spec:
+  hostnames:
+  - {{ .Values.mediadomain }}
+  parentRefs:
+  - name: envoy-gateway
+    namespace: envoy-gateway-system
+  rules:
+  - backendRefs:
+    - name: mediaserver-ws
+      port: 443
+    matches:
+    - path:
+        type: PathPrefix
+        value: /
+    name: rule-0-prefix-root
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: www-webrtc-observer-org
+  namespace: default
+spec:
+  hostnames:
+  - {{ .Values.webdomain }}
+  parentRefs:
+  - name: envoy-gateway
+    namespace: envoy-gateway-system
+  rules:
+  - backendRefs:
+    - name: webapp
+      port: 80
+    matches:
+    - path:
+        type: PathPrefix
+        value: /
+    name: rule-0-prefix-root
+  - backendRefs:
+    - name: prometheus-grafana
+      namespace: monitoring
+      port: 80
+    matches:
+    - path:
+        type: PathPrefix
+        value: /g
+    name: rule-1-prefix-g
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: default-backend
+  namespace: default
+spec:
+  parentRefs:
+  - name: envoy-gateway
+    namespace: envoy-gateway-system
+  rules:
+  - backendRefs:
+    - name: webapp
+      port: 80
+    name: rule-default-backend
+---
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: ReferenceGrant
+metadata:
+  name: allow-grafana-from-httproute
+  namespace: monitoring
+spec:
+  from:
+  - group: gateway.networking.k8s.io
+    kind: HTTPRoute
+    namespace: default
+  to:
+  - group: ""
+    kind: Service
+    name: prometheus-grafana
