@@ -259,7 +259,7 @@ data:
               "fullMetaSearch": false,
               "includeNullMetadata": true,
               "instant": false,
-              "legendFormat": "{{ "{{" }}direction{{ "}}" }}",
+              "legendFormat": "\u007b\u007bdirection\u007d\u007d",
               "range": true,
               "refId": "A",
               "useBackend": false
