@@ -42,6 +42,6 @@
 		"solid-js": "^1.9.4",
 		"solid-transition-group": "^0.2.3",
 		"ua-parser-js": "^1.0.37",
-		"uuid": "^10.0.0"
+		"uuid": "^14.0.0"
 	}
 }
