@@ -99,10 +99,10 @@
     "@observertc/sample-schemas-js" "2.2.10"
     uuid "^8.3.2"
 
-"@observertc/report-schemas-js@2.2.10", "@observertc/report-schemas-js@npm:@observertc/schemas@2.3.0-SNAPSHOT.9b35ffd06c9114e312b113dfb0a85d949accf3fa":
-  version "2.3.0-SNAPSHOT.9b35ffd06c9114e312b113dfb0a85d949accf3fa"
-  resolved "https://registry.yarnpkg.com/@observertc/schemas/-/schemas-2.3.0-SNAPSHOT.9b35ffd06c9114e312b113dfb0a85d949accf3fa.tgz#660d0a81fea48579b48b25aa2ec0fcf94ce42ea3"
-  integrity sha512-r4ZQw119vtsQ3s5rNaKXZEqD+vznWNwWV5p05bTPN0ra5SAEpi2h/SpUE10vvDTSuOPUVKZj+D8ex7gwua2cCg==
+"@observertc/report-schemas-js@2.2.10", "@observertc/report-schemas-js@npm:@observertc/schemas@2.2.0":
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/@observertc/schemas/-/schemas-2.2.0.tgz#c03f3d2ada6992ce6a29175407c2e58d8cec0fd5"
+  integrity sha512-Zfxn7odAHNTJMzRHTSy5zsud9VC7wwNY7hYbnrb0K6c0XevWuV9k21NyouJseogpDoTcT9+XGiez7f4S8sQ5NA==
 
 "@observertc/sample-schemas-js@2.2.1-rc.0":
   version "2.2.1-rc.0"
