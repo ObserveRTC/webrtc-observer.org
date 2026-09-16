@@ -25,6 +25,9 @@
     "url": "https://github.com/balazskreith/webrtc-sfu-transcriber/issues"
   },
   "homepage": "https://github.com/balazskreith/webrtc-sfu-transcriber#readme",
+  "resolutions": {
+    "@observertc/report-schemas-js": "npm:@observertc/schemas@2.2.0"
+  },
   "dependencies": {
     "@bufbuild/protobuf": "^1.10.0",
     "@observertc/observer-js": "^0.42.8",
